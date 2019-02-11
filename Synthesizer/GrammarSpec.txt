@@ -1,0 +1,23 @@
+<?xml version="1.0"?>  
+<grammar>
+	<startSymbol>
+		N
+	</startSymbol>
+	<nonTerminals>
+		N, L, T
+	</nonTerminals>
+	<terminals>
+		0, 10, head, sort, filter, eqz, x1, x2
+	</terminals>
+	<production>
+		<rule>
+			N --> 0, 10, head L, x1, x2
+		</rule>	
+		<rule>
+			L --> sort L, x1, x2, filter L T
+		</rule>
+	    <rule>
+			T --> eqz
+		</rule>
+	</production>
+</grammar>
