@@ -6,16 +6,16 @@ using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Z3;
 namespace NHibernateDemoApp
-{
-
+{   
     public class Program
     {
+        public const string specsFolderPath = "Specs/";
         static void Main(string[] args)
         {
 
-            var fileName_grammarSpec = "GrammarSpec.xml";
-            var fileName_componentSpec = "ComponentSpecs.xml";
-            var fileName_programSpec = "ProgramSpec.xml";
+            var path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
+            var path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
+            var path_programSpec = specsFolderPath + "ProgramSpec.xml";
 
             var z3ComponentsSpecs = new List<Tuple<string, string>>();
             using (Context ctx = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
@@ -23,9 +23,9 @@ namespace NHibernateDemoApp
                 //var component = new ComponentSpec1();
                 //component.test(ctx);
 
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(fileName_componentSpec, ctx);
-                var programSpec = ProgramSpecBuilder.Build(fileName_programSpec, ctx);
-                var grammar = GrammarBuilder.Build(fileName_grammarSpec);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, ctx);
+                var programSpec = ProgramSpecBuilder.Build(path_programSpec, ctx);
+                var grammar = GrammarBuilder.Build(path_grammarSpec);
 
                 var counter = 1;
                 while (true)
