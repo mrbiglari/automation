@@ -38,7 +38,7 @@ namespace NHibernateDemoApp
                     {
                         //Console.ReadLine();
                         program = program.ChipRoot();
-                        var satEncodedProgram = program.SATEncode(z3ComponentsSpecs, ctx);
+                        var satEncodedProgram = program.SATEncode(z3ComponentsSpecs, ctx, programSpec);
                         var satEncodedProgramArgs = satEncodedProgram.Args;
                     }                   
                     

@@ -10,7 +10,7 @@ namespace CSharpTree
     public class TreeNode<T> : IEnumerable<TreeNode<T>>
     {
         public T Data { get; set; }
-        public BoolExpr Spec;
+        public string Spec;
         public TreeNode<T> Parent { get; set; }
         public ICollection<TreeNode<T>> Children { get; set; }
         public double index;
@@ -82,10 +82,14 @@ namespace CSharpTree
             }           
         }
 
-        public BoolExpr SATEncode(List<Tuple<string, string>> componentSpecs, Context context)
+        public BoolExpr SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec)
         {
             var satEncodingList = SATEncoder<T>.SATEncode(this, componentSpecs, context);
-            var satEncoding = context.MkAnd(satEncodingList.Select(x => x.spec).ToArray());
+            //var satEncoding = context.MkAnd(satEncodingList.Select(x => x.spec).ToArray());
+
+            var satEncodings = SATEncoder<T>.GenerateZ3Expression(this, context, programSpec);
+            var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
+            //var satEncoding = context.MkAnd(satEncodingList.ToArray());
             return satEncoding;
         }
 

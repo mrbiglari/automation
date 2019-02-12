@@ -56,11 +56,32 @@ namespace NHibernateDemoApp
 
             return spec;
         }
-
-        public static List<ComponentSpec> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<ComponentSpec> satEncodingList = null)
+        public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
         {
             if (satEncodingList == null)
                 satEncodingList = new List<ComponentSpec>();
+
+            var spec = node.Spec;
+
+            if (node.IsLeaf)
+            {
+                spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
+            }
+
+            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
+
+            satEncodingList.Add(nodeSpec);
+            foreach (var child in node.Children)
+            {
+                GenerateZ3Expression(child, context, programSpec, satEncodingList);
+            }
+
+            return satEncodingList;
+        }
+            public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
+        {
+            if (specList == null)
+                specList = new List<string>();
 
             var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
             var spec = String.Empty;
@@ -79,16 +100,14 @@ namespace NHibernateDemoApp
                 spec = spec.Replace(y, ivs + node.index);
             }
 
-            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
-            node.Spec = nodeSpec.spec;
-            satEncodingList.Add(nodeSpec);
-
-            foreach(var child in node.Children)
+            node.Spec = spec;
+            specList.Add(spec);
+            foreach (var child in node.Children)
             {
-                SATEncode(child, componentSpecs, context, satEncodingList);
+                SATEncode(child, componentSpecs, context, specList);
             }
 
-            return satEncodingList;
+            return specList;
         }
     }
 }

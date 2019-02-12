@@ -9,7 +9,17 @@ namespace NHibernateDemoApp
 {
     public class ProgramSpec
     {
-        public List<string> input;
+        public List<Example> examples;
+
+        public ProgramSpec(List<Example> examples)
+        {
+            this.examples = examples;
+        }
+    }
+
+    public class Example
+    {
+        public List<List<string>> inputs;
         public List<string> output;
         public BoolExpr spec;
         public string specAsString;
@@ -39,36 +49,36 @@ namespace NHibernateDemoApp
             return param + dot + arg_1 + eq + arg_2;
         }
 
-        public ProgramSpec(List<string> input, List<string> output, Context context)
+        public Example(List<List<string>> inputs, List<string> output, Context context)
         {
-            this.input = input;
+            this.inputs = inputs;
             this.output = output;
             foreach(var property in properties)
             {
                 switch(property)
                 {
                     case (first):
-                        specSringList.Add(Formulate(first, input.First(), x));
+                        specSringList.Add(Formulate(first, inputs.First().First(), x));
                         specSringList.Add(Formulate(first, output.First(), y));
                         break;
 
                     case (last):
-                        specSringList.Add(Formulate(last, input.Last(), x));
+                        specSringList.Add(Formulate(last, inputs.First().Last(), x));
                         specSringList.Add(Formulate(last, output.Last(), y));
                         break;
 
                     case (max):
-                        specSringList.Add(Formulate(max, input.Select(x => Int32.Parse(x)).Max().ToString(), x));
+                        specSringList.Add(Formulate(max, inputs.First().Select(x => Int32.Parse(x)).Max().ToString(), x));
                         specSringList.Add(Formulate(max, output.Select(x => Int32.Parse(x)).Max().ToString(), y));
                         break;
 
                     case (min):
-                        specSringList.Add(Formulate(min, input.Select(x => Int32.Parse(x)).Min().ToString(), x));
+                        specSringList.Add(Formulate(min, inputs.First().Select(x => Int32.Parse(x)).Min().ToString(), x));
                         specSringList.Add(Formulate(min, output.Select(x => Int32.Parse(x)).Min().ToString(), y));
                         break;
 
                     case (size):
-                        specSringList.Add(Formulate(size, input.Count.ToString(), x));
+                        specSringList.Add(Formulate(size, inputs.First().Count.ToString(), x));
                         specSringList.Add(Formulate(size, output.Count.ToString(), y));
                         break;
                 }

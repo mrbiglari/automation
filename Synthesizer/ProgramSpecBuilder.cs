@@ -12,12 +12,12 @@ namespace NHibernateDemoApp
     public class ProgramSpecBuilder
     {
         public const string key_programSpecs= "ProgramSpecs";
-        public const string key_programSpec = "Spec";
+        public const string key_programSpec = "Example";
         public const string key_input = "Input";
         public const string key_output = "Output";
         public static Context context;
 
-        public static List<ProgramSpec> Build(string fileName, Context ctx)
+        public static ProgramSpec Build(string fileName, Context ctx)
         {
             context = ctx;
             var specContent = GetProgramSpecsFile(fileName);
@@ -33,7 +33,7 @@ namespace NHibernateDemoApp
 
     
 
-        private static List<ProgramSpec> BuildProgramSpecFromSpec(XElement componentSpecsXML)
+        private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML)
         {
             var programSpecsList = componentSpecsXML.Descendants(key_programSpec)
                 .Select(x => new Dictionary<string, string>()
@@ -42,18 +42,26 @@ namespace NHibernateDemoApp
                     {key_output, x.Descendants(key_output).FirstOrDefault().Value.Trim() }
                 }).ToList();
 
-            var programSpecs = new List<ProgramSpec>();
+            var programSpecs = new List<Example>();
 
             foreach(var componentSpec in programSpecsList)
             {
-                var input = componentSpec[key_input].Replace("[",String.Empty).Replace("]", String.Empty).SplitBy(",").Select(x => x.Trim()).ToList();
+                var inputSplitted = componentSpec[key_input].SplitBy("--");
+                var inputs = new List<List<string>>()
+                {
+                    inputSplitted.First().Replace("[", String.Empty).Replace("]", String.Empty).SplitBy(",").Select(x => x.Trim()).ToList(),
+                    new List<string>()
+                    {
+                        inputSplitted.Last()
+                    }
+                };
                 var output = componentSpec[key_output].Replace("[", String.Empty).Replace("]", String.Empty).SplitBy(",").Select(x => x.Trim()).ToList();
 
-                programSpecs.Add(new ProgramSpec(input, output, context));
+                programSpecs.Add(new Example(inputs, output, context));
                 //programSpecs.Add(new List<List<string>>() {one, two });
             }
 
-            return programSpecs;    
+            return new ProgramSpec(programSpecs);    
         }
     }
 }
