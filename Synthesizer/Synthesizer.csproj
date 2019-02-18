@@ -83,6 +83,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arg.cs" />
     <Compile Include="ComponentSpec.cs" />
     <Compile Include="ComponentSpec1.cs" />
     <Compile Include="ComponentSpecs.cs" />

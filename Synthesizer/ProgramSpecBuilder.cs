@@ -11,7 +11,10 @@ namespace NHibernateDemoApp
 {  
     public class ProgramSpecBuilder
     {
-        public const string key_programSpecs= "ProgramSpecs";
+        public const string key_args = "Arg";
+        public const string key_type = "Type";
+        public const string key_inputArgs = "InputArgs";
+        public const string key_outputArgs = "OutputArgs";
         public const string key_programSpec = "Example";
         public const string key_input = "Input";
         public const string key_output = "Output";
@@ -35,6 +38,8 @@ namespace NHibernateDemoApp
 
         private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML)
         {
+            var argsList = componentSpecsXML.Descendants(key_inputArgs).Descendants(key_args).Descendants(key_type).Select(x => new Arg(x.Value.Trim())).ToList();
+
             var programSpecsList = componentSpecsXML.Descendants(key_programSpec)
                 .Select(x => new Dictionary<string, string>()
                 {
@@ -42,7 +47,7 @@ namespace NHibernateDemoApp
                     {key_output, x.Descendants(key_output).FirstOrDefault().Value.Trim() }
                 }).ToList();
 
-            var programSpecs = new List<Example>();
+            var examples = new List<Example>();
 
             foreach(var componentSpec in programSpecsList)
             {
@@ -57,11 +62,11 @@ namespace NHibernateDemoApp
                 };
                 var output = componentSpec[key_output].Replace("[", String.Empty).Replace("]", String.Empty).SplitBy(",").Select(x => x.Trim()).ToList();
 
-                programSpecs.Add(new Example(inputs, output, context));
+                examples.Add(new Example(inputs, output, context));
                 //programSpecs.Add(new List<List<string>>() {one, two });
             }
 
-            return new ProgramSpec(programSpecs);    
+            return new ProgramSpec(examples, argsList);    
         }
     }
 }

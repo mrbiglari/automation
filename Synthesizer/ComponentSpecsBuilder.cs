@@ -72,27 +72,27 @@ namespace NHibernateDemoApp
             {ERelationalOperators.L, "<"},
             {ERelationalOperators.LEq, "≤"},
         };
-        public static BoolExpr GetSpec(ERelationalOperators opr, ArithExpr x, ArithExpr y, Context ctx)
+        public static BoolExpr GetSpec(ERelationalOperators opr, ArithExpr arg_1, ArithExpr arg_2, Context ctx)
         {
             switch (opr)
             {
                 case (ERelationalOperators.Eq):
-                    return ctx.MkEq(x,y);
+                    return ctx.MkEq(arg_1,arg_2);
 
                 case (ERelationalOperators.Gt):
-                    return ctx.MkGt(x, y);
+                    return ctx.MkGt(arg_1, arg_2);
 
                 case (ERelationalOperators.L):
-                    return ctx.MkLt(x, y);
+                    return ctx.MkLt(arg_1, arg_2);
 
                 case (ERelationalOperators.GtEq):
-                    var first = ctx.MkEq(x, y);
-                    var second = ctx.MkGt(x, y);
+                    var first = ctx.MkEq(arg_1, arg_2);
+                    var second = ctx.MkGt(arg_1, arg_2);
                     return ctx.MkOr(first, second);
 
                 case (ERelationalOperators.LEq):
-                    var firsts = ctx.MkEq(x, y);
-                    var seconds = ctx.MkLt(x, y);
+                    var firsts = ctx.MkEq(arg_1, arg_2);
+                    var seconds = ctx.MkLt(arg_1, arg_2);
                     return ctx.MkOr(firsts, seconds);
             }
             return null;
@@ -108,21 +108,21 @@ namespace NHibernateDemoApp
             {ELogicalOperators.EQV, "≡"},            
         };
 
-        public static BoolExpr GetSpec(ELogicalOperators opr, BoolExpr x, BoolExpr y, Context ctx)
+        public static BoolExpr GetSpec(ELogicalOperators opr, BoolExpr arg_1, BoolExpr arg_2, Context ctx)
         {
             switch (opr)
             {
                 case (ELogicalOperators.AND):
-                    return ctx.MkAnd(new BoolExpr[]{x, y});
+                    return ctx.MkAnd(new BoolExpr[]{arg_1, arg_2});
 
                 case (ELogicalOperators.OR):
-                    return ctx.MkOr(new BoolExpr[] { x, y });
+                    return ctx.MkOr(new BoolExpr[] { arg_1, arg_2 });
 
                 case (ELogicalOperators.NOT):
-                    return ctx.MkNot(x);
+                    return ctx.MkNot(arg_1);
 
                 case (ELogicalOperators.EQV):
-                    return ctx.MkEq(x, y);
+                    return ctx.MkEq(arg_1, arg_2);
             }
             return null;
         }
@@ -137,21 +137,21 @@ namespace NHibernateDemoApp
             {EArithmaticOperators.DIV, "/"},
         };
 
-        public static ArithExpr GetSpec(EArithmaticOperators opr, ArithExpr x, ArithExpr y, Context ctx)
+        public static ArithExpr GetSpec(EArithmaticOperators opr, ArithExpr arg_1, ArithExpr arg_2, Context ctx)
         {
             switch (opr)
             {
                 case (EArithmaticOperators.SUM):
-                    return ctx.MkAdd(x, y);
+                    return ctx.MkAdd(arg_1, arg_2);
 
                 case (EArithmaticOperators.SUB):
-                    return ctx.MkSub(x, y);
+                    return ctx.MkSub(arg_1, arg_2);
 
                 case (EArithmaticOperators.MUL):
-                    return ctx.MkMul(x, y);
+                    return ctx.MkMul(arg_1, arg_2);
 
                 case (EArithmaticOperators.DIV):
-                    return ctx.MkDiv(x, y);
+                    return ctx.MkDiv(arg_1, arg_2);
             }
             return null;
         }

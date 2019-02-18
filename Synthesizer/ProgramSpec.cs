@@ -10,11 +10,39 @@ namespace NHibernateDemoApp
     public class ProgramSpec
     {
         public List<Example> examples;
+        public List<Arg> args;
 
-        public ProgramSpec(List<Example> examples)
+        public ProgramSpec(List<Example> examples, List<Arg> args)
         {
             this.examples = examples;
+            this.args = args;
         }
+    }
+
+    public static class Symbols
+    {
+        public const string listType = "list";
+        public const string intType = "int";
+        public const string otherType = "other";
+
+        public const string first = "first";
+        public const string last = "last";
+        public const string size = "size";
+        public const string max = "max";
+        public const string min = "min";
+        public const string eq = "=";
+        public const string inputArg = "x";
+        public const string outputArg = "y";
+        public const string dot = ".";
+
+        public static List<string> properties = new List<string>()
+        {
+            first,
+            last,
+            size,
+            max,
+            min
+        };
     }
 
     public class Example
@@ -25,24 +53,17 @@ namespace NHibernateDemoApp
         public string specAsString;
         public List<string> specSringList = new List<string>();
 
-        private const string first = "first";
-        private const string last = "last";
-        private const string size = "size";
-        private const string max = "max";
-        private const string min = "min";
-        private const string eq = "=";
-        private const string x = "x";
-        private const string y = "y";
-        private const string dot = ".";
+        private const string first = Symbols.first;
+        private const string last = Symbols.last;
+        private const string size = Symbols.size;
+        private const string max = Symbols.max;
+        private const string min = Symbols.min;
+        private const string eq = Symbols.eq;
+        private const string x = Symbols.inputArg;
+        private const string y = Symbols.outputArg;
+        private const string dot = Symbols.dot;
 
-        private List<string> properties = new List<string>()
-        {
-            first,
-            last,
-            size,
-            max,
-            min
-        };
+        
 
         private string Formulate(string arg_1, string arg_2, string param)
         {
@@ -53,7 +74,7 @@ namespace NHibernateDemoApp
         {
             this.inputs = inputs;
             this.output = output;
-            foreach(var property in properties)
+            foreach(var property in Symbols.properties)
             {
                 switch(property)
                 {
@@ -82,8 +103,7 @@ namespace NHibernateDemoApp
                         specSringList.Add(Formulate(size, output.Count.ToString(), y));
                         break;
                 }
-            }
-            
+            }            
         }
     }
 }

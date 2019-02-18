@@ -56,6 +56,42 @@ namespace NHibernateDemoApp
 
             return spec;
         }
+
+        public static string GetLeafSpec(ProgramSpec programSpec, TreeNode<T> node)
+        {
+            var argIndex = Int32.Parse(node.Data.ToString().Replace(Symbols.inputArg, "") != node.Data.ToString() ?
+                node.Data.ToString().Replace(Symbols.inputArg, "") :
+                "-1");
+            var argType = (argIndex != -1)? programSpec.args[argIndex - 1].type : Symbols.otherType;
+
+            var retSpecList = new List<string>();
+
+            switch (argType)
+            {
+                case (Symbols.listType):
+                    foreach(var property in Symbols.properties)
+                    {
+                        retSpecList.Add(node.Data.ToString() + Symbols.dot + property
+                            + RelationalOperators.operators[ERelationalOperators.Eq]
+                            + ivs + node.index + Symbols.dot + property);                        
+                    }                    
+                    break;
+
+                case (Symbols.intType):
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index);
+                    break;
+
+                case (Symbols.otherType):
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index);
+                    break;
+
+                default:
+                    break;
+            }
+            var retSpec =  String.Join(LogicalOperators.operators[ELogicalOperators.AND], retSpecList);
+            return retSpec;
+        }
+
         public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
         {
             if (satEncodingList == null)
@@ -65,7 +101,8 @@ namespace NHibernateDemoApp
 
             if (node.IsLeaf)
             {
-                spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
+                spec = GetLeafSpec(programSpec,node);
+                //spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
             }
 
             var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
@@ -78,7 +115,7 @@ namespace NHibernateDemoApp
 
             return satEncodingList;
         }
-            public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
+        public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
         {
             if (specList == null)
                 specList = new List<string>();
@@ -92,7 +129,7 @@ namespace NHibernateDemoApp
             }
             else if (node.IsRoot)
             {
-                spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);                
+                spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
             }
             else
             {
