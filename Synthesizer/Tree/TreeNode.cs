@@ -84,6 +84,8 @@ namespace CSharpTree
 
         public BoolExpr SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec)
         {
+            var programSpecAsString = SATEncoder<T>.GetProgramSpecZ3AsString(programSpec);
+            var programSpecAsZ3Expression = SATEncoder<T>.GetProgramSpecZ3Expression(programSpecAsString, context);
             var satEncodingList = SATEncoder<T>.SATEncode(this, componentSpecs, context);
             //var satEncoding = context.MkAnd(satEncodingList.Select(x => x.spec).ToArray());
 

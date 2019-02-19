@@ -62,19 +62,19 @@ namespace NHibernateDemoApp
             var argIndex = Int32.Parse(node.Data.ToString().Replace(Symbols.inputArg, "") != node.Data.ToString() ?
                 node.Data.ToString().Replace(Symbols.inputArg, "") :
                 "-1");
-            var argType = (argIndex != -1)? programSpec.args[argIndex - 1].type : Symbols.otherType;
+            var argType = (argIndex != -1) ? programSpec.args[argIndex - 1].type : Symbols.otherType;
 
             var retSpecList = new List<string>();
 
             switch (argType)
             {
                 case (Symbols.listType):
-                    foreach(var property in Symbols.properties)
+                    foreach (var property in Symbols.properties)
                     {
                         retSpecList.Add(node.Data.ToString() + Symbols.dot + property
                             + RelationalOperators.operators[ERelationalOperators.Eq]
-                            + ivs + node.index + Symbols.dot + property);                        
-                    }                    
+                            + ivs + node.index + Symbols.dot + property);
+                    }
                     break;
 
                 case (Symbols.intType):
@@ -88,9 +88,70 @@ namespace NHibernateDemoApp
                 default:
                     break;
             }
-            var retSpec =  String.Join(LogicalOperators.operators[ELogicalOperators.AND], retSpecList);
+            var retSpec = String.Join(LogicalOperators.operators[ELogicalOperators.AND], retSpecList);
             return retSpec;
         }
+
+        public static List<Dictionary<string, List<List<string>>>> GetProgramSpecZ3Expression(List<Dictionary<string, List<List<string>>>> examples, Context context)
+        {
+            foreach(var example in examples)
+            {
+                var instance = example[Symbols.inputArg].SelectMany(x => x).ToList();
+                var s = instance.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create("inputArg", x))).ToList();
+                
+                ;
+            }
+            return null;
+            
+        }
+
+            public static List<Dictionary<string, List<List<string>>>> GetProgramSpecZ3AsString (ProgramSpec programSpec)
+        {
+            var examples = new List<Dictionary<string, List<List<string>>>>();
+
+            foreach (var example in programSpec.examples)
+            {
+                var specs = example.specStringList;
+
+                var listIndexes = programSpec.args.FindAllIndexes(x => x.type == Symbols.listType).ToList();
+
+                var args = new Dictionary<string, List<List<string>>>()
+                {
+                     { Symbols.inputArg, new List<List<string>>() },
+                     { Symbols.outputArg, new List<List<string>>() }
+                };
+
+                foreach (var listIndex in listIndexes)
+                {
+                    var index = listIndex + 1;
+                    var arg = new List<string>();
+                    foreach (var spec in specs[Symbols.inputArg])
+                    {
+                        var newSpec = spec;
+                        newSpec = newSpec.Replace(Symbols.inputArg + Symbols.dot, Symbols.inputArg + index + Symbols.dot);
+                        arg.Add(newSpec);
+                    }
+
+                    //args[Symbols.inputArg] = new List<List<string>>();
+                    args[Symbols.inputArg].Add(arg);
+
+                    arg = new List<string>();
+                    foreach (var spec in specs[Symbols.outputArg])
+                    {
+                        var newSpec = spec;
+                        newSpec = newSpec.Replace(Symbols.inputArg + Symbols.dot, Symbols.inputArg + index + Symbols.dot);
+                        arg.Add(newSpec);
+                    }
+                    args[Symbols.outputArg] = new List<List<string>>();
+                    args[Symbols.outputArg].Add(arg);
+                }
+                examples.Add(args);
+            }
+
+
+            return examples;
+        }
+
 
         public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
         {
@@ -101,7 +162,7 @@ namespace NHibernateDemoApp
 
             if (node.IsLeaf)
             {
-                spec = GetLeafSpec(programSpec,node);
+                spec = GetLeafSpec(programSpec, node);
                 //spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
             }
 
