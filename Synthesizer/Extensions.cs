@@ -6,8 +6,21 @@ using System.Threading.Tasks;
 
 namespace NHibernateDemoApp
 {
-    public static class Extensions
+    public static class EnumHelper
     {
+        public static T GetEnumValue<T>(string term)
+        {
+            foreach (T argType in Enum.GetValues(typeof(T)))
+            {
+                var check = argType.ToString().ToLower().Equals(term);
+                if (check)
+                    return argType;
+            }
+            return default(T);
+        }
+    }
+        public static class Extensions
+    {        
         public static List<T> Clone<T>(this List<T> listToClone) where T : ICloneable
         {
             return listToClone.Select(item => (T)item.Clone()).ToList();

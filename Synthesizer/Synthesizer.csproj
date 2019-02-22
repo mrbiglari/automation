@@ -98,6 +98,7 @@
     <Compile Include="ProgramSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SATEncoder.cs" />
+    <Compile Include="SMTSolver.cs" />
     <Compile Include="TreeVisualizer.cs" />
     <Compile Include="Tree\TreeNode.cs" />
   </ItemGroup>

@@ -25,7 +25,7 @@ namespace NHibernateDemoApp
         public static string Before(TreeNode<T> node, string spec, int index)
         {
             string before;
-            if (spec.Contains(ops))
+            if (spec.Contains($"{x}{ops}"))
                 before = (node.Children.Count > 1) ? x + index + ops : x + ops;
             else
                 before = (node.Children.Count > 1) ? x + index : x;
@@ -36,7 +36,7 @@ namespace NHibernateDemoApp
         public static string After(TreeNode<T> node, string spec, int index)
         {
             string after;
-            if (spec.Contains(ops))
+            if (spec.Contains($"{x}{ops}"))
                 after = ivs + node.Children.ElementAt(index - 1).index + ops;
             else
                 after = ivs + node.Children.ElementAt(index - 1).index;
@@ -92,64 +92,47 @@ namespace NHibernateDemoApp
             return retSpec;
         }
 
-        public static List<Dictionary<string, List<List<string>>>> GetProgramSpecZ3Expression(List<Dictionary<string, List<List<string>>>> examples, Context context)
+        public static List<BoolExpr> GetProgramSpecZ3Expression(List<List<string>> programSpecAsString, Context context)
         {
-            foreach(var example in examples)
+            var programSpecAsBoolExprList = new List<BoolExpr>();
+            foreach (var example in programSpecAsString)
             {
-                var instance = example[Symbols.inputArg].SelectMany(x => x).ToList();
-                var s = instance.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create("inputArg", x))).ToList();
-                
-                ;
+                var exampleSpecsAsBoolExprArray = example.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create($"parameter_{x.SplitBy(".").FirstOrDefault()}", x)).spec).ToArray();
+                var exampleSpecAsBoolExpr = context.MkAnd(exampleSpecsAsBoolExprArray);
+                programSpecAsBoolExprList.Add(exampleSpecAsBoolExpr);
             }
-            return null;
-            
+
+            return programSpecAsBoolExprList;            
         }
 
-            public static List<Dictionary<string, List<List<string>>>> GetProgramSpecZ3AsString (ProgramSpec programSpec)
+        public static List<List<string>> GetProgramSpecZ3AsString(ProgramSpec programSpec)
         {
-            var examples = new List<Dictionary<string, List<List<string>>>>();
+            var programSpecAsString = new List<List<string>>();
 
-            foreach (var example in programSpec.examples)
+            foreach(var example in programSpec.examples)
             {
-                var specs = example.specStringList;
-
-                var listIndexes = programSpec.args.FindAllIndexes(x => x.type == Symbols.listType).ToList();
-
-                var args = new Dictionary<string, List<List<string>>>()
+                var exampleSpecAsString = new List<string>();
+                foreach (var parameter in example.parameters)
                 {
-                     { Symbols.inputArg, new List<List<string>>() },
-                     { Symbols.outputArg, new List<List<string>>() }
-                };
-
-                foreach (var listIndex in listIndexes)
-                {
-                    var index = listIndex + 1;
-                    var arg = new List<string>();
-                    foreach (var spec in specs[Symbols.inputArg])
+                    switch(parameter.argType)
                     {
-                        var newSpec = spec;
-                        newSpec = newSpec.Replace(Symbols.inputArg + Symbols.dot, Symbols.inputArg + index + Symbols.dot);
-                        arg.Add(newSpec);
-                    }
+                        case (ArgType.List):
+                            parameter.As<List<string>>().ForEach((x) =>
+                            {
+                                exampleSpecAsString.Add(x);
+                            });
+                            break;
+                        case (ArgType.Int):
+                            exampleSpecAsString.Add(parameter.As<string>());
+                            break;
 
-                    //args[Symbols.inputArg] = new List<List<string>>();
-                    args[Symbols.inputArg].Add(arg);
-
-                    arg = new List<string>();
-                    foreach (var spec in specs[Symbols.outputArg])
-                    {
-                        var newSpec = spec;
-                        newSpec = newSpec.Replace(Symbols.inputArg + Symbols.dot, Symbols.inputArg + index + Symbols.dot);
-                        arg.Add(newSpec);
                     }
-                    args[Symbols.outputArg] = new List<List<string>>();
-                    args[Symbols.outputArg].Add(arg);
                 }
-                examples.Add(args);
+                programSpecAsString.Add(exampleSpecAsString);
             }
 
-
-            return examples;
+            
+            return programSpecAsString;
         }
 
 
@@ -163,7 +146,6 @@ namespace NHibernateDemoApp
             if (node.IsLeaf)
             {
                 spec = GetLeafSpec(programSpec, node);
-                //spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
             }
 
             var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
@@ -194,7 +176,7 @@ namespace NHibernateDemoApp
             }
             else
             {
-                spec = spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
                 spec = spec.Replace(y, ivs + node.index);
             }
 
@@ -207,5 +189,32 @@ namespace NHibernateDemoApp
 
             return specList;
         }
+
+        public static SMTModel SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
+        {
+            return new SMTModel()
+            {
+                satEncodedProgram = SATEncodeProgram(componentSpecs, context, programSpec, programRoot),
+                satEncodedProgramSpec = SATEncodeProgramSpec(context, programSpec)
+            };
+        }
+        public static BoolExpr SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
+        {
+            var satEncodingList = SATEncode(programRoot, componentSpecs, context);
+
+            var satEncodings = GenerateZ3Expression(programRoot, context, programSpec);
+            var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
+            //var satEncoding = context.MkAnd(satEncodingList.ToArray());
+            return satEncoding;
+        }
+
+        public static List<BoolExpr> SATEncodeProgramSpec(Context context, ProgramSpec programSpec)
+        {
+            var programSpecAsString = GetProgramSpecZ3AsString(programSpec);
+            var programSpecAsZ3Expression = GetProgramSpecZ3Expression(programSpecAsString, context);
+
+            return programSpecAsZ3Expression;
+        }
+
     }
 }

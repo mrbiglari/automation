@@ -18,13 +18,13 @@ namespace NHibernateDemoApp
             var path_programSpec = specsFolderPath + "ProgramSpec.xml";
 
             var z3ComponentsSpecs = new List<Tuple<string, string>>();
-            using (Context ctx = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
+            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
                 //var component = new ComponentSpec1();
                 //component.test(ctx);
 
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, ctx);
-                var programSpec = ProgramSpecBuilder.Build(path_programSpec, ctx);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
+                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
                 var grammar = GrammarBuilder.Build(path_grammarSpec);
 
                 var counter = 1;
@@ -38,8 +38,9 @@ namespace NHibernateDemoApp
                     {
                         //Console.ReadLine();
                         program = program.ChipRoot();
-                        var satEncodedProgram = program.SATEncode(z3ComponentsSpecs, ctx, programSpec);
-                        var satEncodedProgramArgs = satEncodedProgram.Args;
+                        var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
+                        var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+                        //var satEncodedProgramArgs = satEncodedProgram.Args;
                     }                   
                     
                     program.Visualize();

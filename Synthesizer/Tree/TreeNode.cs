@@ -80,20 +80,7 @@ namespace CSharpTree
             {
                 element.Parent = elementToDelete.Parent;
             }           
-        }
-
-        public BoolExpr SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec)
-        {
-            var programSpecAsString = SATEncoder<T>.GetProgramSpecZ3AsString(programSpec);
-            var programSpecAsZ3Expression = SATEncoder<T>.GetProgramSpecZ3Expression(programSpecAsString, context);
-            var satEncodingList = SATEncoder<T>.SATEncode(this, componentSpecs, context);
-            //var satEncoding = context.MkAnd(satEncodingList.Select(x => x.spec).ToArray());
-
-            var satEncodings = SATEncoder<T>.GenerateZ3Expression(this, context, programSpec);
-            var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
-            //var satEncoding = context.MkAnd(satEncodingList.ToArray());
-            return satEncoding;
-        }
+        }        
 
         public TreeNode<T> ChipRoot()
         {
