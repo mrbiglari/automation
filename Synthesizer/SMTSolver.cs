@@ -14,34 +14,50 @@ namespace NHibernateDemoApp
     }
     public static class SMTSolver
     {
-        //public Solver solver;
-        //public BoolExpr satEncodedProgram;
-        //public List<BoolExpr> satEncodedProgramSpec;
-
-
         public static Solver InitializeSolver(Context context)
         {
             return context.MkSolver();
         }
 
+        public static List<BoolExpr> FlattenExpressionsList(BoolExpr expression, List<BoolExpr> returnArray = null)
+        {
+            if (returnArray == null)
+                returnArray = new List<BoolExpr>();
+            var s = expression.Args.First().Args.Count();
+            if ((expression.Args.Count() != 2 || expression.Args.First().Args.Count() != 0) && expression.IsOr == false)
+            {
+                foreach (var arg in expression.Args)
+                {
+
+                    FlattenExpressionsList((BoolExpr)arg, returnArray);
+                }
+                return returnArray;
+            }
+            returnArray.Add(expression);
+
+            return returnArray;
+
+        }
+
         public static List<BoolExpr> SMTSolve(Context context, SMTModel model)
         {
-            //satEncodedProgram = model.satEncodedProgram;
-            //satEncodedProgramSpec = model.satEncodedProgramSpec;
-
             var satEncodedProgramSpecInstance = model.satEncodedProgramSpec.FirstOrDefault();
 
             var solver = InitializeSolver(context);
 
             var expression = context.MkAnd(model.satEncodedProgram, satEncodedProgramSpecInstance);
-            solver.AssertAndTrack(expression, expression);
+
+            //This step is neccessary to make each expression trackable by Z3, otherwise the unsatcore will track to each expression
+            var flattenedExpressionsArray = FlattenExpressionsList(expression).ToArray();
+            
+            //solver.AssertAndTrack(expression, expression);
+            solver.AssertAndTrack(flattenedExpressionsArray, flattenedExpressionsArray);
 
             var result = solver.Check();
 
             if (result == Status.UNSATISFIABLE)
             {
                 Console.WriteLine("unsat");
-                //Console.WriteLine("proof: {0}", solver.Proof);
                 Console.WriteLine("core: ");
                 foreach (Expr c in solver.UnsatCore)
                 {
@@ -51,7 +67,6 @@ namespace NHibernateDemoApp
             if (result == Status.SATISFIABLE)
             {
                 Console.WriteLine("sat");
-                //Console.WriteLine(String.Join(" ", solver.Units.ToList()));
             }
 
             return solver.UnsatCore.ToList();

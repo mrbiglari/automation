@@ -69,6 +69,52 @@ namespace NHibernateDemoApp
             Expr y = ctx.MkConst("y", ctx.MkIntSort());
             Expr zero = ctx.MkNumeral(0, ctx.MkIntSort());
             Expr one = ctx.MkNumeral(1, ctx.MkIntSort());
+            Expr minusOne = ctx.MkNumeral(-1, ctx.MkIntSort());
+            Expr five = ctx.MkNumeral(5, ctx.MkIntSort());
+            Expr ten = ctx.MkNumeral(10, ctx.MkIntSort());
+
+            Solver solver = ctx.MkSolver();
+
+            // x > 0
+            var s1 = ctx.MkGt((ArithExpr)x, (ArithExpr)zero);
+            // y < 5
+            var s2 = ctx.MkLt((ArithExpr)y, (ArithExpr)five);
+            // x > -1
+            var s3 = ctx.MkGt((ArithExpr)x, (ArithExpr)minusOne);
+            // y = x + 10
+            var s4 = ctx.MkEq((ArithExpr)y, ctx.MkAdd((ArithExpr)x, (ArithExpr)ten));
+
+            var s5 = ctx.MkAnd(new BoolExpr[] { s1, s2, s3 , s4});
+
+            solver.AssertAndTrack(s5, s5);
+
+            //solver.AssertAndTrack(s1, s1);
+            //solver.AssertAndTrack(s2, s2);
+            //solver.AssertAndTrack(s3, s3);
+            //solver.AssertAndTrack(s4, s4);
+
+
+            Status result = solver.Check();
+
+            if (result == Status.UNSATISFIABLE)
+            {
+                Console.WriteLine("unsat");
+                Console.WriteLine("proof: {0}", solver.Proof);
+                Console.WriteLine("core: ");
+                foreach (Expr c in solver.UnsatCore)
+                {
+                    Console.WriteLine("{0}", c);
+                }
+            }
+        }
+
+        public void test1(Context ctx)
+        {
+
+            Expr x = ctx.MkConst("x", ctx.MkIntSort());
+            Expr y = ctx.MkConst("y", ctx.MkIntSort());
+            Expr zero = ctx.MkNumeral(0, ctx.MkIntSort());
+            Expr one = ctx.MkNumeral(1, ctx.MkIntSort());
             Expr minusOne = ctx.MkNumeral(-2, ctx.MkIntSort());
             Expr five = ctx.MkNumeral(5, ctx.MkIntSort());
             Expr ten = ctx.MkNumeral(4, ctx.MkIntSort());
