@@ -194,7 +194,7 @@ namespace NHibernateDemoApp
         }
 
 
-        public static ComponentSpec GetComponentSpec(Tuple<string, string> componentSpec)
+        public static List<BoolExpr> GetComponentSpec(Tuple<string, string> componentSpec)
         {
             var name = componentSpec.Item1;
             var specList = componentSpec.Item2.SplitBy(Operators.GetSymbolFor(ELogicalOperators.AND)).Select(x => x.Trim()).ToList();
@@ -212,9 +212,10 @@ namespace NHibernateDemoApp
                 var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);
                 z3SpecsList.Add(boolExpr);
             }
-            var z3Spec = (z3SpecsList.Count > 1) ? context.MkAnd(z3SpecsList.ToArray()) : z3SpecsList.First();
+            //var z3Spec = (z3SpecsList.Count > 1) ? context.MkAnd(z3SpecsList.ToArray()) : z3SpecsList.First();
 
-            return new ComponentSpec(name, z3Spec);
+            //return new ComponentSpec(name, z3Spec);
+            return z3SpecsList;
         }
 
         private static List<Tuple<string, string>> BuildComponentSpecsFromSpec(XElement componentSpecsXML)

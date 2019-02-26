@@ -92,14 +92,14 @@ namespace NHibernateDemoApp
             return retSpec;
         }
 
-        public static List<BoolExpr> GetProgramSpecZ3Expression(List<List<string>> programSpecAsString, Context context)
+        public static List<ExampleNode> GetProgramSpecZ3Expression(List<List<string>> programSpecAsString, Context context)
         {
-            var programSpecAsBoolExprList = new List<BoolExpr>();
+            var programSpecAsBoolExprList = new List<ExampleNode>();
             foreach (var example in programSpecAsString)
             {
-                var exampleSpecsAsBoolExprArray = example.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create($"parameter_{x.SplitBy(".").FirstOrDefault()}", x)).spec).ToArray();
-                var exampleSpecAsBoolExpr = context.MkAnd(exampleSpecsAsBoolExprArray);
-                programSpecAsBoolExprList.Add(exampleSpecAsBoolExpr);
+                var exampleSpecsAsBoolExprArray = example.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create($"parameter_{x.SplitBy(".").FirstOrDefault()}", x)).First()).ToList();
+                //var exampleSpecAsBoolExpr = context.MkAnd(exampleSpecsAsBoolExprArray);
+                programSpecAsBoolExprList.Add(new ExampleNode(exampleSpecsAsBoolExprArray));
             }
 
             return programSpecAsBoolExprList;            
@@ -135,40 +135,17 @@ namespace NHibernateDemoApp
             return programSpecAsString;
         }
 
-
-        public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
-        {
-            if (satEncodingList == null)
-                satEncodingList = new List<ComponentSpec>();
-
-            var spec = node.Spec;
-
-            if (node.IsLeaf)
-            {
-                spec = GetLeafSpec(programSpec, node);
-            }
-
-            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
-
-            satEncodingList.Add(nodeSpec);
-            foreach (var child in node.Children)
-            {
-                GenerateZ3Expression(child, context, programSpec, satEncodingList);
-            }
-
-            return satEncodingList;
-        }
-        public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
+        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, List<ProgramNode> specList = null)
         {
             if (specList == null)
-                specList = new List<string>();
+                specList = new List<ProgramNode>();
 
             var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
             var spec = String.Empty;
 
             if (node.IsLeaf)
             {
-                spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
+                spec = GetLeafSpec(programSpec, node);
             }
             else if (node.IsRoot)
             {
@@ -181,14 +158,72 @@ namespace NHibernateDemoApp
             }
 
             node.Spec = spec;
-            specList.Add(spec);
+            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
+
+            specList.Add(new ProgramNode(node.Data.ToString(), node.index, nodeSpec));
+
             foreach (var child in node.Children)
             {
-                SATEncode(child, componentSpecs, context, specList);
+                SATEncodeTemp(child, programSpec, componentSpecs, context, specList);
             }
 
             return specList;
         }
+
+        //public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
+        //{
+        //    if (satEncodingList == null)
+        //        satEncodingList = new List<ComponentSpec>();
+
+        //    var spec = node.Spec;
+
+        //    if (node.IsLeaf)
+        //    {
+        //        spec = GetLeafSpec(programSpec, node);
+        //    }
+
+        //    var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
+
+        //    satEncodingList.Add(nodeSpec);
+        //    foreach (var child in node.Children)
+        //    {
+        //        GenerateZ3Expression(child, context, programSpec, satEncodingList);
+        //    }
+
+        //    return satEncodingList;
+        //}
+
+        //public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
+        //{
+        //    if (specList == null)
+        //        specList = new List<string>();
+
+        //    var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
+        //    var spec = String.Empty;
+
+        //    if (node.IsLeaf)
+        //    {
+        //        spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
+        //    }
+        //    else if (node.IsRoot)
+        //    {
+        //        spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+        //    }
+        //    else
+        //    {
+        //        spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+        //        spec = spec.Replace(y, ivs + node.index);
+        //    }
+
+        //    node.Spec = spec;
+        //    specList.Add(spec);
+        //    foreach (var child in node.Children)
+        //    {
+        //        SATEncode(child, componentSpecs, context, specList);
+        //    }
+
+        //    return specList;
+        //}
 
         public static SMTModel SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
         {
@@ -198,17 +233,17 @@ namespace NHibernateDemoApp
                 satEncodedProgramSpec = SATEncodeProgramSpec(context, programSpec)
             };
         }
-        public static BoolExpr SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
+        public static List<ProgramNode> SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
         {
-            var satEncodingList = SATEncode(programRoot, componentSpecs, context);
+            var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context);
 
-            var satEncodings = GenerateZ3Expression(programRoot, context, programSpec);
-            var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
+            //var satEncodings = GenerateZ3Expression(programRoot, context, programSpec);
+            //var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
             //var satEncoding = context.MkAnd(satEncodingList.ToArray());
-            return satEncoding;
+            return satEncodingList;
         }
 
-        public static List<BoolExpr> SATEncodeProgramSpec(Context context, ProgramSpec programSpec)
+        public static List<ExampleNode> SATEncodeProgramSpec(Context context, ProgramSpec programSpec)
         {
             var programSpecAsString = GetProgramSpecZ3AsString(programSpec);
             var programSpecAsZ3Expression = GetProgramSpecZ3Expression(programSpecAsString, context);

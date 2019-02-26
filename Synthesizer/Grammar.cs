@@ -20,7 +20,7 @@ namespace NHibernateDemoApp
         public string startSymbol;
         public int maxArity;
 
-        private Random rand = new Random();
+        private Random rand = new Random(1);
 
 
         public void addNonTerminalSymbol(string nonTerminalSymbol)
@@ -73,9 +73,9 @@ namespace NHibernateDemoApp
             return index + 1;
         }
 
-        public double calculateIndex(int i, int k, int d)
+        public int calculateIndex(int i, int k, int d)
         {
-            return (Math.Pow(k, d - 1) + i - 1);
+            return (int)(Math.Pow(k, d - 1) + i - 1);
         }
 
 

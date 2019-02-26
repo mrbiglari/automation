@@ -7,10 +7,36 @@ using System.Threading.Tasks;
 
 namespace NHibernateDemoApp
 {
+
+
+    public class ProgramNode
+    {
+        public List<BoolExpr> clauses;
+        public string componentName;
+        public int index;
+
+        public ProgramNode(string componentName, int index, List<BoolExpr> clauses)
+        {
+            this.clauses = clauses;
+            this.componentName = componentName;
+            this.index = index;
+        }
+
+    }
+
+    public class ExampleNode
+    {
+        public List<BoolExpr> clauses;
+        public ExampleNode(List<BoolExpr> clauses)
+        {
+            this.clauses = clauses;
+        }
+    }
+
     public class SMTModel
     {
-        public BoolExpr satEncodedProgram;
-        public List<BoolExpr> satEncodedProgramSpec;
+        public List<ProgramNode> satEncodedProgram;
+        public List<ExampleNode> satEncodedProgramSpec;
     }
     public static class SMTSolver
     {
@@ -45,13 +71,66 @@ namespace NHibernateDemoApp
 
             var solver = InitializeSolver(context);
 
-            var expression = context.MkAnd(model.satEncodedProgram, satEncodedProgramSpecInstance);
+            foreach(var programNode in model.satEncodedProgram)
+            {
+                foreach(var clause in programNode.clauses)
+                {
+                    //BoolExpr p = context.MkEq(clause, context.MkBoolConst($"{programNode.index}_{programNode.componentName}"));
+                    BoolExpr p = context.MkBoolConst($"{programNode.index}_{programNode.componentName}_{clause.ToString()}");
+                    solver.AssertAndTrack(clause,p);
+                }
+            }
+
+
+            var example = model.satEncodedProgramSpec.First();
+            //foreach(var example in model.satEncodedProgramSpec)
+            //{
+                foreach(var clause in example.clauses)
+                {
+                solver.AssertAndTrack(clause, clause);
+                }
+
+            //}
+
+            //var expression = context.MkAnd(model.satEncodedProgram, satEncodedProgramSpecInstance);
+            
+            //var expression = default(BoolExpr);
 
             //This step is neccessary to make each expression trackable by Z3, otherwise the unsatcore will track to each expression
-            var flattenedExpressionsArray = FlattenExpressionsList(expression).ToArray();
-            
+            //var flattenedExpressionsArray = FlattenExpressionsList(expression).ToArray();
+            //var s1 = flattenedExpressionsArray.GroupBy(x => x).Where(g => g.Count() > 1).SelectMany(r => r).ToList();
+            //var s = flattenedExpressionsArray.GroupBy(x => x).Select(x => x.First()).ToList();
             //solver.AssertAndTrack(expression, expression);
-            solver.AssertAndTrack(flattenedExpressionsArray, flattenedExpressionsArray);
+
+            //foreach (var expression1 in flattenedExpressionsArray)
+            //{
+            //    try
+            //    {
+            //        solver.AssertAndTrack(expression, expression);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        ;
+            //    }
+            //}
+
+            //solver = InitializeSolver(context);
+
+            //for (var i = 0; i < flattenedExpressionsArray.Count(); i++)
+            //{
+            //    try
+            //    {
+            //        BoolExpr p = context.MkEq(flattenedExpressionsArray[i], context.MkBoolConst($"P{i}"));
+            //        solver.AssertAndTrack(flattenedExpressionsArray[i], p);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        ;
+            //    }
+            //}
+
+
+            //solver.AssertAndTrack(flattenedExpressionsArray, flattenedExpressionsArray);
 
             var result = solver.Check();
 

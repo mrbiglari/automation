@@ -13,7 +13,7 @@ namespace CSharpTree
         public string Spec;
         public TreeNode<T> Parent { get; set; }
         public ICollection<TreeNode<T>> Children { get; set; }
-        public double index;
+        public int index;
         public int arity;
 
         public Boolean IsRoot
