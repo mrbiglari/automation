@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-namespace NHibernateDemoApp
+namespace Synthesis
 {
 
     class OldProgram

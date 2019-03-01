@@ -1,4 +1,4 @@
-﻿namespace NHibernateDemoApp
+﻿namespace Synthesis
 {
     public class Arg
     {

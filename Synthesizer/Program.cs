@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Z3;
-namespace NHibernateDemoApp
+namespace Synthesis
 {   
     public class Program
     {
@@ -34,8 +34,8 @@ namespace NHibernateDemoApp
                         Console.ReadLine();
                     var program = grammar.generateRandomProgram();
 
-                    if (program.ElementsIndex.Count() > 3 && program.ElementsIndex.Count() > 5)
-                    {
+                    //if (program.ElementsIndex.Count() > 3 && program.ElementsIndex.Count() > 5)
+                    //{
                         //Console.ReadLine();
                         program = program.ChipRoot();
                         //var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
@@ -44,8 +44,9 @@ namespace NHibernateDemoApp
                         //var s = satEncodedArtifactsAsSMTModel.OrderBy(x => x.Item2).ToList();
 
                         var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+
                         //var satEncodedProgramArgs = satEncodedProgram.Args;
-                    }                   
+                    //}                   
                     
                     program.Visualize();
 

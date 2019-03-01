@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace NHibernateDemoApp
+namespace Synthesis
 {
     public enum SymbolType
     {
@@ -65,25 +65,28 @@ namespace NHibernateDemoApp
             return false;
         }
 
-        public int getPositionInRow(TreeNode<string> node)
+        public int calculateIndex(TreeNode<string> node)
         {
             int index = 0;
             if(node.Parent != null)
-            index = node.Parent.Children.ToList().IndexOf(node);
-            return index + 1;
+            {
+                var parentPositionInRow = ((node.Parent.index) * maxArity);
+                var currentNodePositionInParentsChildrenList = (node.Parent.Children.ToList().IndexOf(node));
+                index = currentNodePositionInParentsChildrenList + parentPositionInRow + 1;
+            }
+            return index;
         }
 
-        public int calculateIndex(int i, int k, int d)
+        public int calculateIndex2(int i, int k, int d)
         {
-            return (int)(Math.Pow(k, d - 1) + i - 1);
+            return (int)(Math.Pow(k, d - 1) + i);
         }
-
 
         public void generateIndexes(TreeNode<string> program)
         {
             var node = program;
-            node.index = calculateIndex(getPositionInRow(node), maxArity, node.Level);                           
-                foreach(var child in node.Children)
+            node.index = calculateIndex(node);
+            foreach (var child in node.Children)
                 {
                     generateIndexes(child);
                 }

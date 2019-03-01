@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NHibernateDemoApp
+namespace Synthesis
 {
     public class ComponentSpec1
     {      

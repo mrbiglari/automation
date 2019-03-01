@@ -1,5 +1,5 @@
 ﻿using Microsoft.Z3;
-using NHibernateDemoApp;
+using Synthesis;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace CSharpTree
             get
             {
                 if (this.IsRoot)
-                    return 0;
+                    return 1;
                 return Parent.Level + 1;
             }
         }
