@@ -21,6 +21,7 @@ namespace Synthesis
         public int maxArity;
 
         private Random rand = new Random(1);
+        //private Random rand = new Random(5);
 
 
         public void addNonTerminalSymbol(string nonTerminalSymbol)
@@ -92,9 +93,17 @@ namespace Synthesis
                 }
         }
 
+        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode)
+        {
+            
+            currentNode = generateRandomAssignment_AST(currentNode);
+            generateIndexes(currentNode);
+
+            return currentNode;
+        }
+
         public TreeNode<string> generateRandomProgram()
         {
-            var random = new Random();
             var program = new TreeNode<string>(startSymbol);
             generateRandomAssignments_AST(program);
             generateIndexes(program);
@@ -138,6 +147,41 @@ namespace Synthesis
                 generateRandomAssignments_ParseTree(newChildNode);
                 }
             }
+
+        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, string lhs = "N")
+        {
+
+            var currentLeftHandSide = lhs;
+
+            if (currentNode.holes?.Count() == 0 || currentNode.holes == null)
+            {
+                var possibleProductionRules1 = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+                var index1 = rand.Next(0, (possibleProductionRules1.Count()));
+                var choosenProductionRule1 = possibleProductionRules1.ElementAt(index1);
+
+                var terminal1 = choosenProductionRule1.rightHandSide.First();
+
+                var newChildNode1 = currentNode.AddChild(terminal1, choosenProductionRule1.arity);
+                currentNode = newChildNode1;
+                currentNode.holes = new Stack<string>(choosenProductionRule1.rightHandSide.GetRange(1, choosenProductionRule1.rightHandSide.Count() - 1));
+                return currentNode;
+            }
+
+            currentLeftHandSide = currentNode.holes.Pop();
+
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+            var index = rand.Next(0, (possibleProductionRules.Count()));
+            var choosenProductionRule = possibleProductionRules.ElementAt(index);
+
+            var terminal = choosenProductionRule.rightHandSide.First();
+
+            var newChildNode = currentNode.AddChild(terminal, choosenProductionRule.arity);
+            currentNode = newChildNode;
+            currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
+            
+            return currentNode;
+        }
+
         private void generateRandomAssignments_AST(TreeNode<string> currentNode, string lhs = "N")
         {
             var currentLeftHandSide = lhs;

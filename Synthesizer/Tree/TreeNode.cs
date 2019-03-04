@@ -15,6 +15,7 @@ namespace CSharpTree
         public ICollection<TreeNode<T>> Children { get; set; }
         public int index;
         public int arity;
+        public Stack<string> holes;
 
         public Boolean IsRoot
         {

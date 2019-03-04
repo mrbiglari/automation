@@ -4,25 +4,45 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using CSharpTree;
 using Microsoft.Z3;
 namespace Synthesis
-{   
+{
     public class Program
     {
         public const string specsFolderPath = "Specs/";
-        static void Main(string[] args)
+        public const string path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
+        public const string path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
+        public const string path_programSpec = specsFolderPath + "ProgramSpec.xml";
+
+        public void GeneratePartialPrograms()
         {
-
-            var path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
-            var path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
-            var path_programSpec = specsFolderPath + "ProgramSpec.xml";
-
             var z3ComponentsSpecs = new List<Tuple<string, string>>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
-                //var component = new ComponentSpec1();
-                //component.test(ctx);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
+                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
+                var grammar = GrammarBuilder.Build(path_grammarSpec);
 
+                var programRoot = new TreeNode<string>(grammar.startSymbol);
+                var currentNode = programRoot;
+                while (true)
+                {
+                    currentNode = grammar.generateRandomAssignment(currentNode);
+
+                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot.Children.First());
+
+                    var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+
+                    programRoot.Visualize();
+                }
+            }
+        }
+        public void GenerateConcretePrograms()
+        {
+            var z3ComponentsSpecs = new List<Tuple<string, string>>();
+            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
+            {
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
                 var grammar = GrammarBuilder.Build(path_grammarSpec);
@@ -33,26 +53,23 @@ namespace Synthesis
                     if (counter % 100 == 0)
                         Console.ReadLine();
                     var program = grammar.generateRandomProgram();
+                    program = program.ChipRoot();
+                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
 
-                    //if (program.ElementsIndex.Count() > 3 && program.ElementsIndex.Count() > 5)
-                    //{
-                        //Console.ReadLine();
-                        program = program.ChipRoot();
-                        //var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
-                        var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
-
-                        //var s = satEncodedArtifactsAsSMTModel.OrderBy(x => x.Item2).ToList();
-
-                        var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
-
-                        //var satEncodedProgramArgs = satEncodedProgram.Args;
-                    //}                   
-                    
+                    var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
                     program.Visualize();
 
                     counter++;
                 }
             }
+        }
+
+        static void Main(string[] args)
+        {
+
+            var program = new Program();
+            program.GenerateConcretePrograms();
+            //program.GeneratePartialPrograms();
         }
     }
 }

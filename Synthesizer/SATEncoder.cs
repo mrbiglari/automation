@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Synthesis.Lemma;
 
 namespace Synthesis
 {
@@ -158,9 +159,14 @@ namespace Synthesis
             }
 
             node.Spec = spec;
-            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
 
-            specList.Add(new ProgramNode(node.Data.ToString(), node.index, nodeSpec));
+            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
+            var nodeOriginalSpec = (specAsString != null)?
+                ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString.Item2)) : null;
+            var s = nodeOriginalSpec?.First().ToString()??null;
+            var storeSpec = new Pair<List<BoolExpr>, List<BoolExpr>>(nodeSpec, nodeOriginalSpec);
+
+            specList.Add(new ProgramNode(node.Data.ToString(), node.index, storeSpec));
 
             foreach (var child in node.Children)
             {
