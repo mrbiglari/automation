@@ -20,8 +20,8 @@ namespace Synthesis
         public string startSymbol;
         public int maxArity;
 
-        private Random rand = new Random(1);
-        //private Random rand = new Random(5);
+        //private Random rand = new Random(1);
+        private Random rand = new Random(5);
 
 
         public void addNonTerminalSymbol(string nonTerminalSymbol)

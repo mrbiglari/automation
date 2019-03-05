@@ -30,7 +30,7 @@ namespace Synthesis
                 {
                     currentNode = grammar.generateRandomAssignment(currentNode);
 
-                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot.Children.First());
+                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, currentNode, grammar);
 
                     var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
 
@@ -54,7 +54,7 @@ namespace Synthesis
                         Console.ReadLine();
                     var program = grammar.generateRandomProgram();
                     program = program.ChipRoot();
-                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program);
+                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, program, grammar);
 
                     var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
                     program.Visualize();

@@ -34,20 +34,35 @@ namespace Synthesis
             return before;
         }
 
+        public static int calculateIndex(TreeNode<T> node, int index)
+        {
+            int retIndex = 0;
+            if (node.Parent != null)
+            {
+                var parentPositionInRow = ((node.index) * 2);
+                var currentNodePositionInParentsChildrenList = index;
+                retIndex = currentNodePositionInParentsChildrenList + parentPositionInRow;
+            }
+            return retIndex;
+        }
+
         public static string After(TreeNode<T> node, string spec, int index)
         {
             string after;
             if (spec.Contains($"{x}{ops}"))
-                after = ivs + node.Children.ElementAt(index - 1).index + ops;
+                //after = ivs + node.Children.ElementAt(index - 1).index + ops;
+                after = ivs + calculateIndex(node, index) + ops;
             else
-                after = ivs + node.Children.ElementAt(index - 1).index;
+                //after = ivs + node.Children.ElementAt(index - 1).index;
+                after = ivs + calculateIndex(node, index);
 
             return after;
         }
 
         public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec)
         {
-            for (int i = 1; i < node.Children.Count + 1; i++)
+            //for (int i = 1; i < node.Children.Count + 1; i++)
+            for (int i = 1; i < node.holes.Count + 1; i++)
             {
                 var before = Before(node, spec, i);
                 var after = After(node, spec, i);
@@ -136,7 +151,7 @@ namespace Synthesis
             return programSpecAsString;
         }
 
-        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, List<ProgramNode> specList = null)
+        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
         {
             if (specList == null)
                 specList = new List<ProgramNode>();
@@ -144,7 +159,9 @@ namespace Synthesis
             var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
             var spec = String.Empty;
 
-            if (node.IsLeaf)
+            var check = componentSpecs.Select( x => x.Item1).Contains(node.Data.ToString());
+
+            if (node.IsLeaf && !check)
             {
                 spec = GetLeafSpec(programSpec, node);
             }
@@ -170,7 +187,7 @@ namespace Synthesis
 
             foreach (var child in node.Children)
             {
-                SATEncodeTemp(child, programSpec, componentSpecs, context, specList);
+                SATEncodeTemp(child, programSpec, componentSpecs, context, grammar, specList);
             }
 
             return specList;
@@ -231,17 +248,17 @@ namespace Synthesis
         //    return specList;
         //}
 
-        public static SMTModel SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
+        public static SMTModel SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
             return new SMTModel()
             {
-                satEncodedProgram = SATEncodeProgram(componentSpecs, context, programSpec, programRoot),
+                satEncodedProgram = SATEncodeProgram(componentSpecs, context, programSpec, programRoot, grammar),
                 satEncodedProgramSpec = SATEncodeProgramSpec(context, programSpec)
             };
         }
-        public static List<ProgramNode> SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot)
+        public static List<ProgramNode> SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
-            var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context);
+            var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context, grammar);
 
             //var satEncodings = GenerateZ3Expression(programRoot, context, programSpec);
             //var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
