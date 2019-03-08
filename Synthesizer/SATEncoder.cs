@@ -37,12 +37,12 @@ namespace Synthesis
         public static int calculateIndex(TreeNode<T> node, int index)
         {
             int retIndex = 0;
-            if (node.Parent != null)
-            {
+            //if (node.Parent != null)
+            //{
                 var parentPositionInRow = ((node.index) * 2);
                 var currentNodePositionInParentsChildrenList = index;
                 retIndex = currentNodePositionInParentsChildrenList + parentPositionInRow;
-            }
+            //}
             return retIndex;
         }
 
@@ -61,8 +61,8 @@ namespace Synthesis
 
         public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec)
         {
-            //for (int i = 1; i < node.Children.Count + 1; i++)
-            for (int i = 1; i < node.holes.Count + 1; i++)
+            for (int i = 1; i < node.Children.Count + 1; i++)
+            //for (int i = 1; i < node.holes.Count + 1; i++)
             {
                 var before = Before(node, spec, i);
                 var after = After(node, spec, i);
@@ -161,7 +161,7 @@ namespace Synthesis
 
             var check = componentSpecs.Select( x => x.Item1).Contains(node.Data.ToString());
 
-            if (node.IsLeaf && !check)
+            if (node.IsLeaf)
             {
                 spec = GetLeafSpec(programSpec, node);
             }
@@ -185,7 +185,7 @@ namespace Synthesis
 
             specList.Add(new ProgramNode(node.Data.ToString(), node.index, storeSpec));
 
-            foreach (var child in node.Children)
+            foreach (var child in node.Children.Where(x => !x.IsHole))
             {
                 SATEncodeTemp(child, programSpec, componentSpecs, context, grammar, specList);
             }

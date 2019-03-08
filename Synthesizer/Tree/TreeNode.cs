@@ -17,6 +17,11 @@ namespace CSharpTree
         public int arity;
         public Stack<string> holes;
 
+        public Boolean IsHole
+        {
+            get { return Children.Count == 0 && Data == null; }
+        }
+
         public Boolean IsRoot
         {
             get { return Parent == null; }
@@ -24,8 +29,27 @@ namespace CSharpTree
 
         public Boolean IsLeaf
         {
-            get { return Children.Count == 0; }
+            get { return Children.Count == 0 && Data != null; }
         }
+
+        public Boolean IsConcrete
+        {
+            get { return !ContainsHoles(); }
+        }
+        public bool ContainsHoles()
+        {
+            var isHole = IsHole;
+            foreach (var child in Children)
+            {
+                isHole = isHole || child.ContainsHoles();
+            }
+            return isHole;
+        }
+
+        //public Boolean IsLeaf
+        //{
+        //    get { return Children.Count(x => x.Data != null) != Children.Count(); }
+        //}
 
         public int Level
         {
@@ -41,7 +65,9 @@ namespace CSharpTree
         {
             this.Data = data;
             this.Children = new LinkedList<TreeNode<T>>();
-
+            //this.Children = new LinkedList<TreeNode<T>>() { new TreeNode<T>() };
+            //this.Children.Add(new TreeNode<T>());
+            //this.holes = new Stack<string>(new List<string>() { "N" });           
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
         }
@@ -53,12 +79,28 @@ namespace CSharpTree
             this.ElementsIndex.Add(this);
         }
 
+        public void FillHole(T child, int arity, int times)
+        {
+            //var childNode = this.Children.FirstOrDefault(x => x.IsHole);
+            //childNode.Data = child;
+
+            this.Data = child;
+
+
+            times.Times(() =>
+            {
+                this.AddChild();
+            });
+            this.RegisterChildForSearch(this);
+            //return this;
+        }
+
         public TreeNode<T> AddChild(T child, int arity)
         {
             TreeNode<T> childNode = new TreeNode<T>(child) { Parent = this, arity = arity };
             this.Children.Add(childNode);
 
-            this.RegisterChildForSearch(childNode);
+            //this.RegisterChildForSearch(childNode);
 
             return childNode;
         }
@@ -67,7 +109,7 @@ namespace CSharpTree
             TreeNode<T> childNode = new TreeNode<T>() { Parent = this };
             this.Children.Add(childNode);
 
-            this.RegisterChildForSearch(childNode);
+            //this.RegisterChildForSearch(childNode);
 
             return childNode;
         }
@@ -77,11 +119,11 @@ namespace CSharpTree
             var elementToDelete = root.Where(x => Comparer<T>.Default.Compare(x.Data, data) >= 0).FirstOrDefault();
 
             elementToDelete.Parent.Children = elementToDelete.Children;
-            foreach(var element in elementToDelete.Children)
+            foreach (var element in elementToDelete.Children)
             {
                 element.Parent = elementToDelete.Parent;
-            }           
-        }        
+            }
+        }
 
         public TreeNode<T> ChipRoot()
         {

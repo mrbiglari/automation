@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Synthesis
 {
+
+
+
     public static class EnumHelper
     {
         public static T GetEnumValue<T>(string term)
@@ -20,7 +23,15 @@ namespace Synthesis
         }
     }
         public static class Extensions
-    {        
+    {
+        public static void Times(this int count, Action action)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                action();
+            }
+        }
+
         public static List<T> Clone<T>(this List<T> listToClone) where T : ICloneable
         {
             return listToClone.Select(item => (T)item.Clone()).ToList();

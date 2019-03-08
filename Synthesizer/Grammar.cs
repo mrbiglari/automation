@@ -151,6 +151,42 @@ namespace Synthesis
         private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, string lhs = "N")
         {
 
+            //var currentLeftHandSide = lhs;
+
+            //if (currentNode.holes?.Count() == 0 || currentNode.holes == null)
+            //{
+            //    var possibleProductionRules1 = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+            //    var index1 = rand.Next(0, (possibleProductionRules1.Count()));
+            //    var choosenProductionRule1 = possibleProductionRules1.ElementAt(index1);
+
+            //    var terminal1 = choosenProductionRule1.rightHandSide.First();
+
+            //    var newChildNode1 = currentNode.FillHole(terminal1, choosenProductionRule1.arity, choosenProductionRule1.rightHandSide.Count() - 1);
+            //    currentNode = newChildNode1;
+            //    currentNode.holes = new Stack<string>(choosenProductionRule1.rightHandSide.GetRange(1, choosenProductionRule1.rightHandSide.Count() - 1));
+            //    return currentNode;
+            //}
+
+            var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
+
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+            var index = rand.Next(0, (possibleProductionRules.Count()));
+            var choosenProductionRule = possibleProductionRules.ElementAt(index);
+
+            var terminal = choosenProductionRule.rightHandSide.First();
+
+            var holeToFill = currentNode.IsHole? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
+
+            holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1);
+            //currentNode = newChildNode;
+            currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
+            
+            return holeToFill;
+        }
+
+        private TreeNode<string> generateRandomAssignment_AST2(TreeNode<string> currentNode, string lhs = "N")
+        {
+
             var currentLeftHandSide = lhs;
 
             if (currentNode.holes?.Count() == 0 || currentNode.holes == null)
@@ -178,7 +214,7 @@ namespace Synthesis
             var newChildNode = currentNode.AddChild(terminal, choosenProductionRule.arity);
             currentNode = newChildNode;
             currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
-            
+
             return currentNode;
         }
 

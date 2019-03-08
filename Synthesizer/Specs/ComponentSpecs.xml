@@ -110,5 +110,13 @@
 		<Spec>
 			y.size = x.size ∧ y.first = x.first
 		</Spec>
-	</ComponentSpec>	
+	</ComponentSpec>
+  <ComponentSpec>
+    <Name>
+      identity
+    </Name>
+    <Spec>
+      y.size = x.size ∧ y.first = x.first ∧ y.last = x.last ∧ y.max = x.max ∧ y.min = x.min
+    </Spec>
+  </ComponentSpec>  
 </ComponentSpecs>
