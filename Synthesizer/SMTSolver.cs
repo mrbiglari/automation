@@ -1,5 +1,6 @@
 ﻿using Microsoft.Z3;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +8,44 @@ using System.Threading.Tasks;
 
 namespace Synthesis
 {
-    public class Lemma
+
+    public class Lemmas : List<Lemma>
+    {
+        public Lemmas()
+        {
+        }
+        public Lemmas(IEnumerable<Lemma> lemmas) : base(lemmas)
+        {
+        }
+
+        public Boolean IsUnSAT(Context context)
+        {
+            var lemmasInConjuction = context.MkAnd
+                (
+                    this.SelectMany(x => x).
+                    Select(x => x.spec)
+                );
+            return SMTSolver.CheckIfUnSAT(context, lemmasInConjuction);
+        }
+    }
+
+    public class Lemma : List<LemmaItem>
+    {
+        public Lemma()
+        {
+        }
+        public Lemma(IEnumerable<LemmaItem> lemma) : base(lemma)
+        {
+        }
+    }
+
+    public class LemmaItem
     {
         public string name;
         public string index;
         public BoolExpr spec;
 
-        public Lemma(string name, string index, BoolExpr spec)
+        public LemmaItem(string name, string index, BoolExpr spec)
         {
             this.name = name;
             this.index = index;
@@ -91,7 +123,15 @@ namespace Synthesis
 
         }
 
-        public static List<Lemma> SMTSolve(Context context, SMTModel model)
+        public static bool CheckIfUnSAT(Context context, BoolExpr check)
+        {
+            var solver = InitializeSolver(context);
+            solver.AssertAndTrack(check, check);
+            var result = solver.Check();
+            return (result == Status.UNSATISFIABLE);
+        }
+
+            public static Lemma SMTSolve(Context context, SMTModel model)
         {
             var satEncodedProgramSpecInstance = model.satEncodedProgramSpec.FirstOrDefault();
 
@@ -133,9 +173,9 @@ namespace Synthesis
                    var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
                    var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
 
-                   return new Lemma(name, index, expressionOriginal);
+                   return new LemmaItem(name, index, expressionOriginal);
                }
-                ).OrderBy(x => Int32.Parse(x.index)).ToList();
+                ).OrderBy(x => Int32.Parse(x.index)).ToList().AsLemma();
 
                 Console.WriteLine("unsat");
                 Console.WriteLine("core: ");

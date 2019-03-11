@@ -24,17 +24,28 @@ namespace Synthesis
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
                 var grammar = GrammarBuilder.Build(path_grammarSpec);
 
+
+                var lemmas = new Lemmas();
                 var programRoot = new TreeNode<string>();
                 var currentNode = programRoot;
                 while (true)
                 {
-                    currentNode = grammar.generateRandomAssignment(currentNode);
+                    currentNode = grammar.generateRandomAssignment(currentNode, lemmas, z3ComponentsSpecs, context);
 
                     var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot, grammar);
 
-                    var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+                    var lemma = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
 
-                    programRoot.Visualize();
+                    if (lemma.Count != 0)
+                        lemmas.Add(lemma);
+                    else
+                    {
+                        currentNode.Parent.Children.Remove(currentNode);
+                        currentNode = currentNode.Parent;
+                    }
+
+                    if (lemmas.IsUnSAT(context))
+                        return;
 
                     if (programRoot.IsConcrete)
                     {
@@ -42,6 +53,7 @@ namespace Synthesis
                         currentNode = programRoot;
                     }
 
+                    programRoot.Visualize();
                 }
             }
         }

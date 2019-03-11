@@ -22,8 +22,18 @@ namespace Synthesis
             return default(T);
         }
     }
-        public static class Extensions
+    public static class Extensions
     {
+        public static Lemma AsLemma(this List<LemmaItem> list)
+        {
+            return new Lemma(list);
+        }
+
+        public static Lemmas AsLemmas(this List<Lemma> list)
+        {
+            return new Lemmas (list);
+        }
+
         public static void Times(this int count, Action action)
         {
             for (int i = 0; i < count; i++)
@@ -40,7 +50,7 @@ namespace Synthesis
         public static List<int> FindAllIndexes<T>(this List<T> list, Predicate<T> match)
         {
             var tempList = list.ToList();
-            
+
             var indexes = new List<int>();
 
             var tempCount = 0;
@@ -72,7 +82,7 @@ namespace Synthesis
             return opr;
         }
 
-        public static T ContainsWhich<T>(this string term, Dictionary<T,string> separators)
+        public static T ContainsWhich<T>(this string term, Dictionary<T, string> separators)
         {
             var operatorType = default(T);
             var keys = separators.Keys;
