@@ -9,17 +9,50 @@ using System.Threading.Tasks;
 namespace Synthesis
 {
 
+    public class Lemmas : List<Lemma>
+    {
+        public Lemmas()
+        {
+        }
+        public Lemmas(IEnumerable<Lemma> lemmas) : base(lemmas)
+        {
+        }
+    }
+
+    public class Lemma : List<LemmaClause>
+    {
+        public Lemma()
+        {
+        }
+        public Lemma(IEnumerable<LemmaClause> lemmaClauses) : base(lemmaClauses)
+        {
+        }
+    }
+
+    public class LemmaClause : List<BoolExpr>
+    {
+        public LemmaClause()
+        {
+        }
+        public LemmaClause(IEnumerable<BoolExpr> expressions) : base(expressions)
+        {
+        }
+    }
+
     public class UnSatCores : List<UnSatCore>
     {
         public UnSatCores()
         {
         }
-        public UnSatCores(IEnumerable<UnSatCore> lemmas) : base(lemmas)
+        public UnSatCores(IEnumerable<UnSatCore> unSATCores) : base(unSATCores)
         {
         }
 
         public Boolean IsUnSAT(Context context)
         {
+            if (this.Count >= 0)
+                return false;
+
             var unSATCoresInConjuction = context.MkAnd
                 (
                     this.SelectMany(x => x).
@@ -34,7 +67,7 @@ namespace Synthesis
         public UnSatCore()
         {
         }
-        public UnSatCore(IEnumerable<UnSatCoreClause> lemma) : base(lemma)
+        public UnSatCore(IEnumerable<UnSatCoreClause> unSATCore) : base(unSATCore)
         {
         }
     }
@@ -189,7 +222,7 @@ namespace Synthesis
             {
                 Console.WriteLine("sat");
             }
-            return null;
+            return new UnSatCore();
         }
     }
 }

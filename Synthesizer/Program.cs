@@ -23,7 +23,7 @@ namespace Synthesis
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
                 var grammar = GrammarBuilder.Build(path_grammarSpec);
-
+                var lemmas = new Lemmas();
 
                 var unSATCores = new UnSatCores();
                 var programRoot = new TreeNode<string>();
@@ -40,38 +40,59 @@ namespace Synthesis
                     {
                         unSATCores.Add(unSATCore);
 
+                        var lemma = new Lemma();
                         foreach (var clause in unSATCore)
                         {
                             var rule = programRoot.GetAtIndex(Int32.Parse(clause.index)).rule;
-                            var componentsToCheck = grammar.productions.Where( x => x.leftHandSide == rule.leftHandSide).Select(x => x.rightHandSide.First()).ToList();
+                            var componentsToCheck = grammar.productions.Where(x => x.leftHandSide == rule.leftHandSide && x.rightHandSide.First() != clause.name)
+                                .Select(x => x.rightHandSide.First()).ToList();
 
-                            var lemmaClause = new List<BoolExpr>();
+                            var lemmaClause = new LemmaClause();
+                            lemmaClause.Add
+                                (
+                                    context.MkNot
+                                    (
+                                        context.MkBoolConst($"C_{clause.index}_{clause.name}")
+                                    )
+                                );
+
                             foreach (var component in componentsToCheck)
                             {
-                                var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).First();
-                                var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
+                                var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).FirstOrDefault();
+                                if (componentSpec != null)
+                                {
+                                    var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
 
-                                var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
+                                    var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
 
-                                if (SMTSolver.CheckIfUnSAT(context, check))
-                                    lemmaClause.Add
-                                        (
-                                            context.MkNot
+                                    if (SMTSolver.CheckIfUnSAT(context, check))
+                                        lemmaClause.Add
                                             (
-                                                context.MkBoolConst($"C_{clause.index}_{component}")
-                                            )
-                                        );
-                            }                                                       
+                                                context.MkNot
+                                                (
+                                                    context.MkBoolConst($"C_{clause.index}_{component}")
+                                                )
+                                            );
+                                }
+                            }
+                            if (lemmaClause.Count > 0)
+                                lemma.Add(lemmaClause);
 
+                            //var s = grammar.productions.Where(x => x.rightHandSide.Contains(clause.name)).First();
 
-                            var s = grammar.productions.Where(x => x.rightHandSide.Contains(clause.name)).First();
-                            
                         }
-                    }
-                    else
-                    {
-                        currentNode.Parent.Children.Remove(currentNode);
-                        currentNode = currentNode.Parent;
+                        lemmas.Add(lemma);
+
+                        if (currentNode.Parent != null)
+                        {
+                            currentNode.Parent.Children.Remove(currentNode);
+                            currentNode = currentNode.Parent;
+                        }
+                        else
+                        {
+                            programRoot = new TreeNode<string>();
+                            currentNode = programRoot;
+                        }
                     }
 
                     if (unSATCores.IsUnSAT(context))
@@ -81,6 +102,8 @@ namespace Synthesis
                     {
                         programRoot = new TreeNode<string>();
                         currentNode = programRoot;
+                        lemmas.Clear();
+                        unSATCores.Clear();
                     }
 
                     programRoot.Visualize();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Z3;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,9 +30,24 @@ namespace Synthesis
             return new UnSatCore(list);
         }
 
-        public static UnSatCores AsLemmas(this List<UnSatCore> list)
+        public static UnSatCores AsUnSATCores(this List<UnSatCore> list)
         {
             return new UnSatCores (list);
+        }
+
+        public static Lemmas AsLemmas(this List<Lemma> list)
+        {
+            return new Lemmas(list);
+        }
+
+        public static Lemma AsLemma(this List<LemmaClause> list)
+        {
+            return new Lemma(list);
+        }
+
+        public static LemmaClause AsLemmaClause(this List<BoolExpr> list)
+        {
+            return new LemmaClause(list);
         }
 
         public static void Times(this int count, Action action)

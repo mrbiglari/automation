@@ -10,8 +10,8 @@
 	</terminals>
 	<production>
 		<rule>
-			N --> 0, 10, head L, x1, x2, tail L, identity L
-		</rule>	
+      N --> 0, 10, head L, x1, x2, tail L, identity L, headExclude L
+    </rule>	
 		<rule>
 			L --> sort L, x1, x2, filter L T, take L N, reverse L
 		</rule>

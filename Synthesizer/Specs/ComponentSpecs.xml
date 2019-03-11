@@ -118,5 +118,21 @@
     <Spec>
       y.size = x.size ∧ y.first = x.first ∧ y.last = x.last ∧ y.max = x.max ∧ y.min = x.min
     </Spec>
-  </ComponentSpec>  
+  </ComponentSpec>
+  <ComponentSpec>
+    <Name>
+      headExclude
+    </Name>
+    <Spec>
+      x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.first ∧ y.last = x.first
+    </Spec>
+  </ComponentSpec>
+  <ComponentSpec>
+    <Name>
+      tail
+    </Name>
+    <Spec>
+      x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.last ∧ y.last = x.last
+    </Spec>
+  </ComponentSpec>
 </ComponentSpecs>
