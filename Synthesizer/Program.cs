@@ -25,26 +25,56 @@ namespace Synthesis
                 var grammar = GrammarBuilder.Build(path_grammarSpec);
 
 
-                var lemmas = new Lemmas();
+                var unSATCores = new UnSatCores();
                 var programRoot = new TreeNode<string>();
                 var currentNode = programRoot;
                 while (true)
                 {
-                    currentNode = grammar.generateRandomAssignment(currentNode, lemmas, z3ComponentsSpecs, context);
+                    currentNode = grammar.generateRandomAssignment(currentNode, unSATCores, z3ComponentsSpecs, context);
 
                     var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot, grammar);
 
-                    var lemma = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+                    var unSATCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
 
-                    if (lemma.Count != 0)
-                        lemmas.Add(lemma);
+                    if (unSATCore?.Count != 0)
+                    {
+                        unSATCores.Add(unSATCore);
+
+                        foreach (var clause in unSATCore)
+                        {
+                            var rule = programRoot.GetAtIndex(Int32.Parse(clause.index)).rule;
+                            var componentsToCheck = grammar.productions.Where( x => x.leftHandSide == rule.leftHandSide).Select(x => x.rightHandSide.First()).ToList();
+
+                            var lemmaClause = new List<BoolExpr>();
+                            foreach (var component in componentsToCheck)
+                            {
+                                var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).First();
+                                var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
+
+                                var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
+
+                                if (SMTSolver.CheckIfUnSAT(context, check))
+                                    lemmaClause.Add
+                                        (
+                                            context.MkNot
+                                            (
+                                                context.MkBoolConst($"C_{clause.index}_{component}")
+                                            )
+                                        );
+                            }                                                       
+
+
+                            var s = grammar.productions.Where(x => x.rightHandSide.Contains(clause.name)).First();
+                            
+                        }
+                    }
                     else
                     {
                         currentNode.Parent.Children.Remove(currentNode);
                         currentNode = currentNode.Parent;
                     }
 
-                    if (lemmas.IsUnSAT(context))
+                    if (unSATCores.IsUnSAT(context))
                         return;
 
                     if (programRoot.IsConcrete)

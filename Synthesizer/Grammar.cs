@@ -94,7 +94,7 @@ namespace Synthesis
                 }
         }
 
-        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, UnSatCores lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
         {
             
             currentNode = generateRandomAssignment_AST(currentNode, lemmas, z3ComponentSpecs, context);
@@ -149,21 +149,21 @@ namespace Synthesis
                 }
             }
 
-        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, UnSatCores unSATCores, List<Tuple<string, string>> z3ComponentSpecs, Context context)
         {
             var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
 
             var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
 
-            foreach (var lemma in lemmas)
+            foreach (var unSATCore in unSATCores)
             {
-                var lemmaClause = lemma.Where(x => Int32.Parse(x.index) == currentNode.index).First().spec;
+                var unSATClause = unSATCore.Where(x => Int32.Parse(x.index) == currentNode.index).First().spec;
                 var rulesConsistentWithLemmas = possibleProductionRules.Where(x =>
                 {
                     var compoentSpec = z3ComponentSpecs.Where(y => y.Item1 == x.rightHandSide.First()).First();
                     var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(compoentSpec));
 
-                    var check = context.MkNot(context.MkImplies(z3ComponentSpec, lemmaClause));
+                    var check = context.MkNot(context.MkImplies(z3ComponentSpec, unSATClause));
                     if (SMTSolver.CheckIfUnSAT(context, check))
                         return true;
                     else
@@ -179,7 +179,7 @@ namespace Synthesis
 
             var holeToFill = currentNode.IsHole? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
 
-            holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1);
+            holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1, choosenProductionRule);
 
             currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
             

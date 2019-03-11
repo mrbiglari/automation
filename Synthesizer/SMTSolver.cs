@@ -9,43 +9,43 @@ using System.Threading.Tasks;
 namespace Synthesis
 {
 
-    public class Lemmas : List<Lemma>
+    public class UnSatCores : List<UnSatCore>
     {
-        public Lemmas()
+        public UnSatCores()
         {
         }
-        public Lemmas(IEnumerable<Lemma> lemmas) : base(lemmas)
+        public UnSatCores(IEnumerable<UnSatCore> lemmas) : base(lemmas)
         {
         }
 
         public Boolean IsUnSAT(Context context)
         {
-            var lemmasInConjuction = context.MkAnd
+            var unSATCoresInConjuction = context.MkAnd
                 (
                     this.SelectMany(x => x).
-                    Select(x => x.spec)
+                    Select(x => context.MkNot(x.spec))
                 );
-            return SMTSolver.CheckIfUnSAT(context, lemmasInConjuction);
+            return SMTSolver.CheckIfUnSAT(context, unSATCoresInConjuction);
         }
     }
 
-    public class Lemma : List<LemmaItem>
+    public class UnSatCore : List<UnSatCoreClause>
     {
-        public Lemma()
+        public UnSatCore()
         {
         }
-        public Lemma(IEnumerable<LemmaItem> lemma) : base(lemma)
+        public UnSatCore(IEnumerable<UnSatCoreClause> lemma) : base(lemma)
         {
         }
     }
 
-    public class LemmaItem
+    public class UnSatCoreClause
     {
         public string name;
         public string index;
         public BoolExpr spec;
 
-        public LemmaItem(string name, string index, BoolExpr spec)
+        public UnSatCoreClause(string name, string index, BoolExpr spec)
         {
             this.name = name;
             this.index = index;
@@ -131,7 +131,7 @@ namespace Synthesis
             return (result == Status.UNSATISFIABLE);
         }
 
-            public static Lemma SMTSolve(Context context, SMTModel model)
+            public static UnSatCore SMTSolve(Context context, SMTModel model)
         {
             var satEncodedProgramSpecInstance = model.satEncodedProgramSpec.FirstOrDefault();
 
@@ -163,7 +163,7 @@ namespace Synthesis
             {
 
                 var UNSATCoreExcludedProgramSpec = solver.UnsatCore.Where(x => !example.clauses.Contains(x)).ToList();
-                var lemma = UNSATCoreExcludedProgramSpec.Select(x =>
+                var unSATCore = UNSATCoreExcludedProgramSpec.Select(x =>
                {
 
                    var splitted = x.Args[0].ToString().Replace("|", "").SplitBy("_");
@@ -173,9 +173,9 @@ namespace Synthesis
                    var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
                    var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
 
-                   return new LemmaItem(name, index, expressionOriginal);
+                   return new UnSatCoreClause(name, index, expressionOriginal);
                }
-                ).OrderBy(x => Int32.Parse(x.index)).ToList().AsLemma();
+                ).OrderBy(x => Int32.Parse(x.index)).ToList().AsUnSATCore();
 
                 Console.WriteLine("unsat");
                 Console.WriteLine("core: ");
@@ -183,7 +183,7 @@ namespace Synthesis
                 {
                     Console.WriteLine("{0}", c);
                 }
-                return lemma;
+                return unSATCore;
             }
             if (result == Status.SATISFIABLE)
             {

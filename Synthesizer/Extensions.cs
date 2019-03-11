@@ -24,14 +24,14 @@ namespace Synthesis
     }
     public static class Extensions
     {
-        public static Lemma AsLemma(this List<LemmaItem> list)
+        public static UnSatCore AsUnSATCore(this List<UnSatCoreClause> list)
         {
-            return new Lemma(list);
+            return new UnSatCore(list);
         }
 
-        public static Lemmas AsLemmas(this List<Lemma> list)
+        public static UnSatCores AsLemmas(this List<UnSatCore> list)
         {
-            return new Lemmas (list);
+            return new UnSatCores (list);
         }
 
         public static void Times(this int count, Action action)

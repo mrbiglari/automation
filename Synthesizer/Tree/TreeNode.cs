@@ -15,6 +15,7 @@ namespace CSharpTree
         public ICollection<TreeNode<T>> Children { get; set; }
         public int index;
         public int arity;
+        public Production rule;
         public Stack<string> holes;
 
         public Boolean IsHole
@@ -79,13 +80,29 @@ namespace CSharpTree
             this.ElementsIndex.Add(this);
         }
 
-        public void FillHole(T child, int arity, int times)
+        public TreeNode<T> GetAtIndex(int index)
+        {
+            if (this.index == index)
+                return this;
+            else
+            {
+                foreach(var child in this.Children)
+                {
+                    return child.GetAtIndex(index);
+                }
+            }
+            return null;
+        }
+
+
+        public void FillHole(T child, int arity, int times, Production rule)
         {
             //var childNode = this.Children.FirstOrDefault(x => x.IsHole);
             //childNode.Data = child;
 
             this.Data = child;
 
+            this.rule = rule;
 
             times.Times(() =>
             {
