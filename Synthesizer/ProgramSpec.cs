@@ -11,6 +11,7 @@ namespace Synthesis
     {
         public List<Example> examples;
         public List<Arg> args;
+        public List<Parameter> parameters;
 
         public ProgramSpec(List<Example> examples, List<Arg> args)
         {

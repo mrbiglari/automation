@@ -12,6 +12,7 @@ namespace Synthesis
     public class ProgramSpecBuilder
     {
         public const string key_args = "Arg";
+        public const string key_programDefinition = "ProgramDefinition";
         public const string key_type = "Type";
         public const string key_properties = "Properties";
         public const string key_inputArgs = "InputArgs";
@@ -53,8 +54,9 @@ namespace Synthesis
         }
 
         private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML)
-        {            
+        {
             //InitializeParametersList();
+            var programDefinition = componentSpecsXML.Descendants(key_programDefinition).First().Value.Trim();
 
             var argTypesList = componentSpecsXML.Descendants(key_inputArgs).Descendants(key_args).Descendants(key_type).Select(x => new Arg(x.Value.Trim())).ToList();
 

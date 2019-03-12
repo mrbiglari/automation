@@ -1,4 +1,7 @@
 <ProgamSpecs>
+  <ProgramDefinition>
+    list(x1), int(x2) -- list(y)
+  </ProgramDefinition>
 	<InputArgs>
 		<Arg>
 			<Type>
@@ -13,8 +16,7 @@
 				int
 			</Type>
 		</Arg>
-	</InputArgs>
-
+	</InputArgs>  
 	<Example>
 		<Input>
       list(1, 34, 15, 6, 10) -- int(2)
