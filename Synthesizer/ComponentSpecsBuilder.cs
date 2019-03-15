@@ -164,11 +164,11 @@ namespace Synthesis
         public const string key_spec = "Spec";
         public static Context context;
 
-        public static List<Tuple<string, string>> Build(string fileName, Context ctx)
+        public static List<Tuple<string, string>> Build(string fileName, Context ctx, ProgramSpec programSpec, Grammar grammar)
         {
             context = ctx;
             var specContent = GetComponentSpecsFile(fileName);
-            return BuildComponentSpecsFromSpec(specContent);
+            return BuildComponentSpecsFromSpec(specContent, programSpec, grammar);
         }
 
         private static XElement GetComponentSpecsFile(string fileName)
@@ -193,6 +193,19 @@ namespace Synthesis
             //return null;
         }
 
+        public static BoolExpr GetSpecForClause(string spec)
+        {
+            var opr = spec.ContainsWhich(RelationalOperators.operators);
+            var operands = spec.SplitBy(RelationalOperators.operators[opr]);
+
+            var arg_1 = GetArg(operands.First());
+
+            var arg_2 = GetArg(operands.Last());
+
+            var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);
+
+            return boolExpr;
+        }
 
         public static List<BoolExpr> GetComponentSpec(Tuple<string, string> componentSpec)
         {
@@ -202,14 +215,7 @@ namespace Synthesis
             var z3SpecsList = new List<BoolExpr>();
             foreach (var spec in specList)
             {
-                var opr = spec.ContainsWhich(RelationalOperators.operators);
-                var operands = spec.SplitBy(RelationalOperators.operators[opr]);
-
-                var arg_1 = GetArg(operands.First());
-                
-                var arg_2 = GetArg(operands.Last());
-
-                var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);
+                var boolExpr = GetSpecForClause(spec);
                 z3SpecsList.Add(boolExpr);
             }
             //var z3Spec = (z3SpecsList.Count > 1) ? context.MkAnd(z3SpecsList.ToArray()) : z3SpecsList.First();
@@ -218,7 +224,33 @@ namespace Synthesis
             return z3SpecsList;
         }
 
-        private static List<Tuple<string, string>> BuildComponentSpecsFromSpec(XElement componentSpecsXML)
+        public static string GetSpecNonComponents(Parameter x)
+        {
+            var retSpecList = new List<string>();
+            switch (x.argType)
+            {
+                case (ArgType.List):
+                    foreach (var property in Symbols.properties)
+                    {
+                        retSpecList.Add($"{Symbols.inputArg}{Symbols.dot}{property}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}{Symbols.dot}{property}");
+                    }
+                    break;
+
+                case (ArgType.Int):
+                    retSpecList.Add($"{Symbols.inputArg}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}");
+                    break;
+
+                case (ArgType.Other):
+                    retSpecList.Add($"{Symbols.inputArg}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}");
+                    break;
+
+                default:
+                    break;
+            }
+            return String.Join(" " + LogicalOperators.operators[ELogicalOperators.AND] + " ", retSpecList);
+        }
+
+        private static List<Tuple<string, string>> BuildComponentSpecsFromSpec(XElement componentSpecsXML, ProgramSpec programSpec, Grammar grammar)
         {
             var componentSpecsList = componentSpecsXML.Descendants(key_componentSpec)
                 .Select(x => 
@@ -228,31 +260,9 @@ namespace Synthesis
                     )
                 ).ToList();
 
-            return componentSpecsList;
-
-            //var z3ComponentSpecs = new List<ComponentSpec>();
-            //foreach(var componentSpec in componentSpecsList)
-            //{
-            //    var name = componentSpec.Item1;
-            //    var specList = componentSpec.Item2.SplitBy(Operators.GetSymbolFor(ELogicalOperators.AND)).Select(x => x.Trim()).ToList();
-                
-            //    var z3SpecsList = new List<BoolExpr>();
-            //    foreach(var spec in specList)
-            //    {
-            //        var opr = spec.ContainsWhich(RelationalOperators.operators);
-            //        var operands = spec.SplitBy(RelationalOperators.operators[opr]);
-
-            //        var arg_1 = GetArg(operands.First());
-            //        var arg_2 = GetArg(operands.Last());
-
-            //        var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);
-            //        z3SpecsList.Add(boolExpr);
-            //    }
-            //    var z3Spec = context.MkAnd(z3SpecsList.ToArray());
-            //    z3ComponentSpecs.Add(new ComponentSpec(name, z3Spec));
-            //}
-                        
-            //return z3ComponentSpecs;            
+           var ret = programSpec.parameters.Where( x => x.parameterType == ParameterType.Input).Select(x => Tuple.Create(x.obj.ToString(), GetSpecNonComponents(x))).ToList();
+            //var ret2 = grammar.types.Select( x => Tuple.Create(x.Item1, x.Item2.obj);
+            return componentSpecsList.Union(ret).ToList();            
         }
     }
 }

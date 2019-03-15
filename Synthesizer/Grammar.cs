@@ -20,6 +20,7 @@ namespace Synthesis
         public List<Production> productions;
         public string startSymbol;
         public int maxArity;
+        public List<Tuple<string, Parameter>> typeConstants;
 
         //private Random rand = new Random(1);
         private Random rand = new Random(5);
@@ -39,13 +40,14 @@ namespace Synthesis
             terminals = new List<string>();
             productions = new List<Production>();
         }
-        public Grammar(string startSymbol, List<string> nonTerminals, List<string> terminals, List<Production> productions, int maxArity)
+        public Grammar(string startSymbol, List<string> nonTerminals, List<string> terminals, List<Production> productions, int maxArity, List<Tuple<string, Parameter>> typeConstants)
         {
             this.startSymbol = startSymbol;
             this.nonTerminals = nonTerminals;
             this.terminals = terminals;
             this.productions = productions;
             this.maxArity = maxArity;
+            this.typeConstants = typeConstants;
         }
         public void addProduction(string lhs, List<string> rhs, int arity)
         {
@@ -170,9 +172,10 @@ namespace Synthesis
                         return false;
                 });
             }
-            
 
-            var index = rand.Next(0, (possibleProductionRules.Count()));
+
+            //var index = rand.Next(0, (possibleProductionRules.Count()));
+            var index = 0;
             var choosenProductionRule = possibleProductionRules.ElementAt(index);
 
             var terminal = choosenProductionRule.rightHandSide.First();

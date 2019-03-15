@@ -19,20 +19,20 @@
 	</InputArgs>  
 	<Example>
 		<Input>
-      list(1, 34, 15, 6, 10) -- int(2)
+      list(1'34'15'6'10) -- int(2)
     </Input>
 		<Output>
-			list(10, 6, 15, 34, 1)
+			list(10'6'15'34'1)
 		</Output>
 		
 	</Example>
 
 	<Example>
 		<Input>
-			list(3, 36, 15, 6, 10) -- int(3)
+			list(3'36'15'6'10) -- int(3)
 		</Input>
 		<Output>
-			list(10, 6, 15, 36, 3)
+			list(10'6'15'36'3)
 		</Output>
 	</Example>
 	

@@ -157,30 +157,59 @@ namespace Synthesis
                 specList = new List<ProgramNode>();
 
             var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
+
             var spec = String.Empty;
 
-            var check = componentSpecs.Select( x => x.Item1).Contains(node.Data.ToString());
+            var nodeSpec = new List<BoolExpr>();
+            if (specAsString == null)
+            {
+                var nodeSpecAsList = grammar.typeConstants.Where(x => x.Item1 == node.Data.ToString()).FirstOrDefault();
 
-            if (node.IsLeaf)
-            {
-                spec = GetLeafSpec(programSpec, node);
-            }
-            else if (node.IsRoot)
-            {
-                spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                switch(nodeSpecAsList.Item2.argType)
+                {
+                    case (ArgType.List):
+                        nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause(x)).ToList();
+                        break;
+
+                    case (ArgType.Int):
+                        nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause(nodeSpecAsList.Item2.obj.ToString()));
+                        break;
+                }
             }
             else
             {
-                spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
-                spec = spec.Replace(y, ivs + node.index);
+                var check = componentSpecs.Select(x => x.Item1).Contains(node.Data.ToString());
+
+                if (node.IsLeaf && node.IsRoot)
+                {
+                    spec = specAsString.Item2.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
+                }
+                else if (node.IsLeaf)
+                {
+                    //spec = GetLeafSpec(programSpec, node);                
+                    //spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+
+                    spec = specAsString.Item2.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{ivs}{node.index}{Symbols.dot}");
+                    spec = spec.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
+                }
+                else if (node.IsRoot)
+                {
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                }
+                else
+                {
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                    spec = spec.Replace(y, ivs + node.index);
+                }
+
+                node.Spec = spec;
+
+                nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
             }
-
-            node.Spec = spec;
-
-            var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
             var nodeOriginalSpec = (specAsString != null)?
-                ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString.Item2)) : null;
-            var s = nodeOriginalSpec?.First().ToString()??null;
+            ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString.Item2)) : null;
+
+
             var storeSpec = new Pair<List<BoolExpr>, List<BoolExpr>>(nodeSpec, nodeOriginalSpec);
 
             specList.Add(new ProgramNode(node.Data.ToString(), node.index, storeSpec));

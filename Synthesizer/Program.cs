@@ -14,15 +14,18 @@ namespace Synthesis
         public const string path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
         public const string path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
         public const string path_programSpec = specsFolderPath + "ProgramSpec.xml";
+        public const string path_typeSpec = specsFolderPath + "TypeSpec.xml";
 
         public void GeneratePartialPrograms()
         {
             var z3ComponentsSpecs = new List<Tuple<string, string>>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
-                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
-                var grammar = GrammarBuilder.Build(path_grammarSpec);
+
+                var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
+                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
+                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
                 var lemmas = new Lemmas();
 
                 var unSATCores = new UnSatCores();
@@ -115,10 +118,10 @@ namespace Synthesis
             var z3ComponentsSpecs = new List<Tuple<string, string>>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context);
-                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context);
-                var grammar = GrammarBuilder.Build(path_grammarSpec);
-
+                var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
+                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
+                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
                 var counter = 1;
                 while (true)
                 {

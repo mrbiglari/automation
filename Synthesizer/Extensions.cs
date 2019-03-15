@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace Synthesis
 {
-
-
-
     public static class EnumHelper
     {
         public static T GetEnumValue<T>(string term)
@@ -22,9 +19,29 @@ namespace Synthesis
             }
             return default(T);
         }
+        public static T ToEnum<T>(string value)
+        {
+            try
+            {
+                return (T)Enum.Parse(typeof(T), value, true);
+            }
+            catch(Exception)
+            {
+                return default(T);
+            }
+        }
+        public static string AsString(this Enum e)
+        {
+            return e.ToString().ToLower();
+        }
+
     }
     public static class Extensions
     {
+        public static string Remove(this string myString, string term)
+        {
+            return myString.Replace(term, "");
+        }
         public static UnSatCore AsUnSATCore(this List<UnSatCoreClause> list)
         {
             return new UnSatCore(list);

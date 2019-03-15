@@ -15,15 +15,16 @@ namespace Synthesis
         private const string _blankSpace = " ";
 
         private const string key_startSymbol = "startSymbol";
+        private const string key_types = "types";
         private const string key_terminals = "terminals";
         private const string key_nonTerminals = "nonTerminals";
         private const string key_rules = "rule";
         private int maxArity;
 
-        public static Grammar Build(string fileName)
+        public static Grammar Build(string fileName, List<TypeSpec> typeSpec)
         {
             var specContent = GetGrammarSpecFile(fileName);
-            return BuildGrammarFromSpec(specContent);
+            return BuildGrammarFromSpec(specContent, typeSpec);
         }
 
         private static XElement GetGrammarSpecFile(string fileName)
@@ -33,9 +34,23 @@ namespace Synthesis
             return XElement.Load(grammarSpecFilepath);
         }
 
-        private static Grammar BuildGrammarFromSpec(XElement grammarSpec)
+        private static Grammar BuildGrammarFromSpec(XElement grammarSpec, List<TypeSpec> typeSpecs)
         {
             var countArity = 0;
+
+            var typeConstants = grammarSpec.Descendants(key_types).First().Value.Trim().SplitBy(Symbols.seperator)
+                .Select((x, index) =>
+                    {
+                        return new Parameter(ParameterType.Other,
+                            EnumHelper.ToEnum<ArgType>(x.SplitBy("(").First()), x.SplitBy("(").Last().Remove(")").Remove("[").Remove("]"), index + 1);
+                    })
+                .Select(x =>
+                    {
+                        var typeSpec = typeSpecs.Where(y => y.type == x.argType).First();
+                        var symbol = (x.argType == ArgType.List) ? $"[{x.obj.ToString()}]" : x.obj.ToString();
+                        return Tuple.Create(symbol, ProgramSpecBuilder.GetParamByType(x, typeSpec));
+                    }).ToList();
+
             var startSymbol = grammarSpec.Descendants(key_startSymbol)
                     .Select(x => x.Value.TrimStart().TrimEnd()).FirstOrDefault();
 
@@ -55,7 +70,7 @@ namespace Synthesis
             {
                 var splitedEntry = entry.SplitBy(_ruleInference);
                 var leftHandsideSymbol = splitedEntry.Select(x => x.Trim()).First();
-                var rightHandSideSymbols = splitedEntry.Last().SplitBy(_ruleSeparator);                
+                var rightHandSideSymbols = splitedEntry.Last().SplitBy(_ruleSeparator);
 
                 foreach (var rhs in rightHandSideSymbols)
                 {
@@ -70,7 +85,7 @@ namespace Synthesis
                 }
 
             }
-            return new Grammar(startSymbol, nonTerminals, terminals, productions, countArity);
+            return new Grammar(startSymbol, nonTerminals, terminals, productions, countArity, typeConstants);
         }
     }
 }

@@ -101,6 +101,7 @@
     <Compile Include="SMTSolver.cs" />
     <Compile Include="TreeVisualizer.cs" />
     <Compile Include="Tree\TreeNode.cs" />
+    <Compile Include="TypeSpecBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -121,6 +122,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Specs\ProgramSpec.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Specs\TypeSpec.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

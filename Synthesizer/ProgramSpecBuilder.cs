@@ -22,11 +22,17 @@ namespace Synthesis
         public const string key_output = "Output";
         public static Context context;
 
-        public static ProgramSpec Build(string fileName, Context ctx)
+        private const string first = Symbols.first;
+        private const string last = Symbols.last;
+        private const string size = Symbols.size;
+        private const string max = Symbols.max;
+        private const string min = Symbols.min;
+
+        public static ProgramSpec Build(string fileName, Context ctx, List<TypeSpec> typeSpecs)
         {
             context = ctx;
             var specContent = GetProgramSpecsFile(fileName);
-            return BuildProgramSpecFromSpec(specContent);
+            return BuildProgramSpecFromSpec(specContent, typeSpecs);
         }
 
         private static XElement GetProgramSpecsFile(string fileName)
@@ -36,27 +42,93 @@ namespace Synthesis
             return XElement.Load(componentSpecsFilepath);
         }
 
-        public static Dictionary<ParameterType, Dictionary<ArgType, List<Parameter>>> parameterList;
-        public static List<Parameter> parameterL;
+        public static List<Parameter> parameterList;
 
-        private static void InitializeParametersList()
+        private static string Formulate_Int(string arg_1, ParameterType param, int index)
         {
-            parameterList = new Dictionary<ParameterType, Dictionary<ArgType, List<Parameter>>>();
+            var indexAsString = (index > 0) ? index.ToString() : String.Empty;
+            if (param == ParameterType.Input)
+                return Symbols.inputArg + indexAsString + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+            else if (param == ParameterType.Output)
+                return Symbols.outputArg + indexAsString + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+            else if (param == ParameterType.Other)
+                return Symbols.outputArg + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+            return null;
+        }
+        private static string Formulate_List(string arg_1, string arg_2, ParameterType param, int index)
+        {
+            var indexAsString = (index > 0) ? index.ToString() : String.Empty;
+            if (param == ParameterType.Input)
+                return Symbols.inputArg + indexAsString + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
+            else if (param == ParameterType.Output)
+                return Symbols.outputArg + indexAsString + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
+            else if (param == ParameterType.Other)
+                return Symbols.outputArg + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
 
-            Enum.GetValues(typeof(ParameterType)).Cast<int>().ToList().ForEach((y) =>
-            {
-                parameterList.Add((ParameterType)y, new Dictionary<ArgType, List<Parameter>>());
-                Enum.GetValues(typeof(ArgType)).Cast<int>().ToList().ForEach((x) =>
-                    {
-                        parameterList[(ParameterType)y].Add((ArgType)x, new List<Parameter>());
-                    });
-            });
+            return String.Empty;
         }
 
-        private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML)
+        public static Parameter GetParamByType(Parameter parameter, TypeSpec argSpec)
         {
-            //InitializeParametersList();
+            switch (parameter.argType)
+            {
+                case (ArgType.List):
+                    var inputAsList = parameter.obj.ToString().SplitBy(Symbols.cotation).Select(x => x.Trim()).ToList();
+                    var list = new List<string>();
+                    foreach (var property in argSpec.properties)
+                    {
+                        switch (property)
+                        {
+                            case (first):
+                                list.Add(Formulate_List(property, inputAsList.First(), parameter.parameterType, parameter.index));
+                                break;
+
+                            case (last):
+                                list.Add(Formulate_List(property, inputAsList.Last(), parameter.parameterType, parameter.index));
+                                break;
+
+                            case (max):
+                                list.Add(Formulate_List(property, inputAsList.Select(x => Int32.Parse(x)).Max().ToString(), parameter.parameterType, parameter.index));
+                                break;
+
+                            case (min):
+                                list.Add(Formulate_List(property, inputAsList.Select(x => Int32.Parse(x)).Min().ToString(), parameter.parameterType, parameter.index));
+                                break;
+
+                            case (size):
+                                list.Add(Formulate_List(property, inputAsList.Count().ToString(), parameter.parameterType, parameter.index));
+                                break;
+                        }
+                    }
+                    //parameter.obj = list;
+                    return new Parameter(parameter.parameterType, parameter.argType, list, parameter.index);
+
+                case (ArgType.Int):
+                    return new Parameter(parameter.parameterType, parameter.argType, Formulate_Int(parameter.As<string>(), parameter.parameterType, parameter.index), parameter.index);
+            }
+            return null;
+        }
+
+        private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML, List<TypeSpec> typeSpecs)
+        {
             var programDefinition = componentSpecsXML.Descendants(key_programDefinition).First().Value.Trim();
+            
+            var inputParametersSplittedList = programDefinition.SplitBy(Symbols.argSeperator).First().SplitBy(Symbols.seperator)
+                .Select(
+                    (x, index) =>
+                    new Parameter(ParameterType.Input, EnumHelper.ToEnum<ArgType>(x.SplitBy("(").First()), x.SplitBy("(").Last().Replace(")", ""), index + 1)                    
+                ).ToList();
+            //UpdateParametersList(inputSplittedList, ParameterType.Input);
+
+            var outputParametersSplittedList = programDefinition.SplitBy(Symbols.argSeperator).Last().SplitBy(Symbols.seperator)
+                .Select(
+                    (x, index) =>
+                    new Parameter(ParameterType.Output, EnumHelper.ToEnum<ArgType>(x.SplitBy("(").First()), x.SplitBy("(").Last().Replace(")", ""), index + 1)
+                ).ToList();
+
+            var parameters = inputParametersSplittedList.Union(outputParametersSplittedList).ToList();
+            //UpdateParametersList(outputSplittedList, ParameterType.Output);
+
 
             var argTypesList = componentSpecsXML.Descendants(key_inputArgs).Descendants(key_args).Descendants(key_type).Select(x => new Arg(x.Value.Trim())).ToList();
 
@@ -80,19 +152,18 @@ namespace Synthesis
 
             foreach (var componentSpec in programSpecsList)
             {
-                parameterL = new List<Parameter>();
+                parameterList = new List<Parameter>();
                 var inputSplittedList = componentSpec[ParameterType.Input].SplitBy(Symbols.argSeperator).Select((x, index) => Tuple.Create(index + 1, x)).ToList();
                 UpdateParametersList(inputSplittedList, ParameterType.Input);
 
                 var outputSplittedList = componentSpec[ParameterType.Output].SplitBy(Symbols.argSeperator).Select((x, index) => Tuple.Create(index + 1, x)).ToList();
                 UpdateParametersList(outputSplittedList, ParameterType.Output);
 
-                examples.Add(new Example(parameterL, argSpecList, context));
+                examples.Add(new Example(parameterList, typeSpecs, context));
             }
 
-            return new ProgramSpec(examples, argTypesList);
+            return new ProgramSpec(examples, argTypesList, parameters);
         }
-
 
         public static void UpdateParametersList(List<Tuple<int, string>> parameters, ParameterType parameterType)
         {
@@ -103,17 +174,19 @@ namespace Synthesis
 
                 var type = EnumHelper.GetEnumValue<ArgType>(argTypeAsString);
                 var index = (parameters.Count() > 1) ? parameter.Item1 : 0;
-                switch (type)
-                {
-                    case ArgType.List:
-                        var arg = argValueAsString.SplitBy(Symbols.seperator).Select(x => x.Trim()).ToList();
+
+                parameterList.Add(new Parameter(parameterType, type, argValueAsString, index));
+                //switch (type)
+                //{
+                //    case ArgType.List:
+                //        var arg = argValueAsString.SplitBy(Symbols.seperator).Select(x => x.Trim()).ToList();
                         
-                        parameterL.Add(new Parameter(parameterType, type, arg, index));
-                        break;
-                    case ArgType.Int:
-                        parameterL.Add(new Parameter(parameterType, type, argValueAsString, index));
-                        break;
-                }
+                //        parameterL.Add(new Parameter(parameterType, type, arg, index));
+                //        break;
+                //    case ArgType.Int:
+                //        parameterL.Add(new Parameter(parameterType, type, argValueAsString, index));
+                //        break;
+                //}
             }
         }
     }
