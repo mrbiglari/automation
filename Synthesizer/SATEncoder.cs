@@ -151,7 +151,30 @@ namespace Synthesis
             return programSpecAsString;
         }
 
-        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
+        public static BoolExpr SATEncodeTempLight(TreeNode<T> node, Context context)
+        {
+            var expressions = SATEncodeTempLight1(node, context);
+
+            if (expressions.Count > 1)
+                return context.MkAnd(expressions);
+            else
+                return expressions.First();
+        }
+
+            public static List<BoolExpr> SATEncodeTempLight1(TreeNode<T> node, Context context)
+        {
+            var satEncoding = new List<BoolExpr>();
+                        
+            satEncoding.Add(node.expression);
+            foreach(var child in node.Children)
+            {
+                SATEncodeTempLight1(child, context);
+            }
+
+            return satEncoding;            
+        }
+
+            public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
         {
             if (specList == null)
                 specList = new List<ProgramNode>();
@@ -206,8 +229,10 @@ namespace Synthesis
 
                 nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
             }
-            var nodeOriginalSpec = (specAsString != null)?
+            var nodeOriginalSpec = (specAsString != null) ?
             ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString.Item2)) : null;
+
+            //var nodeOriginalSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString?.Item2??null));
 
 
             var storeSpec = new Pair<List<BoolExpr>, List<BoolExpr>>(nodeSpec, nodeOriginalSpec);

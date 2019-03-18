@@ -27,6 +27,15 @@ namespace Synthesis
         public Lemma(IEnumerable<LemmaClause> lemmaClauses) : base(lemmaClauses)
         {
         }
+        public BoolExpr AsExpression(Context context)
+        {
+            var expressions = this.Select(x => x.AsAnd(context));
+            if (expressions.Count() > 1)
+                return context.MkOr(expressions);
+            else
+                return expressions.First();
+
+        }
     }
 
     public class LemmaClause : List<BoolExpr>
@@ -37,6 +46,16 @@ namespace Synthesis
         public LemmaClause(IEnumerable<BoolExpr> expressions) : base(expressions)
         {
         }
+
+        public BoolExpr AsAnd(Context context)
+        {
+            if(this.Count > 1)
+            return context.MkAnd(this);
+            else
+            return this.First();
+
+        }
+
     }
 
     public class UnSatCores : List<UnSatCore>
@@ -184,12 +203,14 @@ namespace Synthesis
 
             var example = model.satEncodedProgramSpec.First();
 
+            //var assumptions = context.MkAnd(example.clauses);
             foreach (var clause in example.clauses)
             {
                 solver.AssertAndTrack(clause, clause);
             }
 
 
+            //var result = solver.Check(assumptions);
             var result = solver.Check();
 
             if (result == Status.UNSATISFIABLE)

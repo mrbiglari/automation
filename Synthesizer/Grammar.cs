@@ -86,21 +86,23 @@ namespace Synthesis
             return (int)(Math.Pow(k, d - 1) + i);
         }
 
-        public void generateIndexes(TreeNode<string> program)
+        public void generateIndexes(TreeNode<string> program, Context context)
         {
             var node = program;
             node.index = calculateIndex(node);
+            node.expression = context.MkBoolConst($"C_{node.index}_{node.Data.ToString()}");
             foreach (var child in node.Children)
                 {
-                    generateIndexes(child);
+                if(!child.IsHole)
+                    generateIndexes(child, context);
                 }
         }
 
-        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, UnSatCores lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
         {
             
             currentNode = generateRandomAssignment_AST(currentNode, lemmas, z3ComponentSpecs, context);
-            generateIndexes(currentNode);
+            //generateIndexes(currentNode, context);
 
             return currentNode;
         }
@@ -109,7 +111,7 @@ namespace Synthesis
         {
             var program = new TreeNode<string>(startSymbol);
             generateRandomAssignments_AST(program);
-            generateIndexes(program);
+            //generateIndexes(program, context);
 
             return program;
         }    
@@ -151,42 +153,70 @@ namespace Synthesis
                 }
             }
 
-        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, UnSatCores unSATCores, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
         {
             var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
 
             var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
 
-            foreach (var unSATCore in unSATCores)
+            var root = currentNode;
+
+            while (possibleProductionRules.Count > 0)
             {
-                var unSATClause = unSATCore.Where(x => Int32.Parse(x.index) == currentNode.index).First().spec;
-                var rulesConsistentWithLemmas = possibleProductionRules.Where(x =>
+                while (root.Parent != null)
+                    root = currentNode.Parent;
+
+
+                //foreach (var unSATCore in unSATCores)
+                //{
+                //    var unSATClause = unSATCore.Where(x => Int32.Parse(x.index) == currentNode.index).First().spec;
+                //    var rulesConsistentWithLemmas = possibleProductionRules.Where(x =>
+                //    {
+                //        var compoentSpec = z3ComponentSpecs.Where(y => y.Item1 == x.rightHandSide.First()).First();
+                //        var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(compoentSpec));
+
+                //        var check = context.MkNot(context.MkImplies(z3ComponentSpec, unSATClause));
+                //        if (SMTSolver.CheckIfUnSAT(context, check))
+                //            return true;
+                //        else
+                //            return false;
+                //    });
+                //}
+
+
+                //var index = rand.Next(0, (possibleProductionRules.Count()));
+                var index = 0;
+                //var index = 1;
+                var choosenProductionRule = possibleProductionRules.ElementAt(index);
+
+                var terminal = choosenProductionRule.rightHandSide.First();
+
+                var holeToFill = currentNode.IsHole ? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
+
+                holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1, choosenProductionRule);
+
+                generateIndexes(root, context);
+                var satEncodedProgram = SATEncoder<string>.SATEncodeTempLight(root, context);
+                foreach(var lemma in lemmas)
                 {
-                    var compoentSpec = z3ComponentSpecs.Where(y => y.Item1 == x.rightHandSide.First()).First();
-                    var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(compoentSpec));
+                    var lemmaAsExpersion = lemma.AsExpression(context);
+                    var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                    if(checkIfUnSAT)
+                    {
+                        holeToFill.MakeHole();
+                        possibleProductionRules.Remove(choosenProductionRule);
+                        break;
+                    }
+                }
 
-                    var check = context.MkNot(context.MkImplies(z3ComponentSpec, unSATClause));
-                    if (SMTSolver.CheckIfUnSAT(context, check))
-                        return true;
-                    else
-                        return false;
-                });
+                if (!holeToFill.IsHole)
+                {
+                    currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
+                    return holeToFill;
+                }
             }
-
-
-            //var index = rand.Next(0, (possibleProductionRules.Count()));
-            var index = 0;
-            var choosenProductionRule = possibleProductionRules.ElementAt(index);
-
-            var terminal = choosenProductionRule.rightHandSide.First();
-
-            var holeToFill = currentNode.IsHole? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
-
-            holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1, choosenProductionRule);
-
-            currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
-            
-            return holeToFill;
+            return null;
         }
 
         private TreeNode<string> generateRandomAssignment_AST2(TreeNode<string> currentNode, string lhs = "N")

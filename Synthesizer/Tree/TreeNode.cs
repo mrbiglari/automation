@@ -17,6 +17,7 @@ namespace CSharpTree
         public int arity;
         public Production rule;
         public Stack<string> holes;
+        public BoolExpr expression;
 
         public Boolean IsHole
         {
@@ -94,6 +95,17 @@ namespace CSharpTree
             return null;
         }
 
+
+        public void MakeHole()
+        {
+
+            this.Data = default(T) ;
+
+            this.rule = null;
+
+            Children = new List<TreeNode<T>>();
+
+        }
 
         public void FillHole(T child, int arity, int times, Production rule)
         {

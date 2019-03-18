@@ -33,7 +33,7 @@ namespace Synthesis
                 var currentNode = programRoot;
                 while (true)
                 {
-                    currentNode = grammar.generateRandomAssignment(currentNode, unSATCores, z3ComponentsSpecs, context);
+                    currentNode = grammar.generateRandomAssignment(currentNode, lemmas, z3ComponentsSpecs, context);
 
                     var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot, grammar);
 
@@ -58,24 +58,26 @@ namespace Synthesis
                                         context.MkBoolConst($"C_{clause.index}_{clause.name}")
                                     )
                                 );
-
-                            foreach (var component in componentsToCheck)
+                            if (clause.spec != null)
                             {
-                                var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).FirstOrDefault();
-                                if (componentSpec != null)
+                                foreach (var component in componentsToCheck)
                                 {
-                                    var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
+                                    var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).FirstOrDefault();
+                                    if (componentSpec != null)
+                                    {
+                                        var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
 
-                                    var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
+                                        var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
 
-                                    if (SMTSolver.CheckIfUnSAT(context, check))
-                                        lemmaClause.Add
-                                            (
-                                                context.MkNot
+                                        if (SMTSolver.CheckIfUnSAT(context, check))
+                                            lemmaClause.Add
                                                 (
-                                                    context.MkBoolConst($"C_{clause.index}_{component}")
-                                                )
-                                            );
+                                                    context.MkNot
+                                                    (
+                                                        context.MkBoolConst($"C_{clause.index}_{component}")
+                                                    )
+                                                );
+                                    }
                                 }
                             }
                             if (lemmaClause.Count > 0)
