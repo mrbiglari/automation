@@ -36,8 +36,13 @@ namespace Synthesis
         }
 
     }
+
     public static class Extensions
     {
+        public static int ToInt(this string myString)
+        {
+            return Int32.Parse(myString);
+        }
         public static string Remove(this string myString, string term)
         {
             return myString.Replace(term, "");
@@ -52,17 +57,17 @@ namespace Synthesis
             return new UnSatCores (list);
         }
 
-        public static Lemmas AsLemmas(this List<Lemma> list)
+        public static Lemmas AsLemmas(this IEnumerable<Lemma> list)
         {
             return new Lemmas(list);
         }
 
-        public static Lemma AsLemma(this List<LemmaClause> list)
+        public static Lemma AsLemma(this IEnumerable<LemmaClause> list)
         {
             return new Lemma(list);
         }
 
-        public static LemmaClause AsLemmaClause(this List<BoolExpr> list)
+        public static LemmaClause AsLemmaClause(this IEnumerable<BoolExpr> list)
         {
             return new LemmaClause(list);
         }

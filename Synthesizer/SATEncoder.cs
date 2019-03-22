@@ -161,20 +161,22 @@ namespace Synthesis
                 return expressions.First();
         }
 
-            public static List<BoolExpr> SATEncodeTempLight1(TreeNode<T> node, Context context)
+        public static List<BoolExpr> SATEncodeTempLight1(TreeNode<T> node, Context context, List<BoolExpr> satEncoding = null)
         {
-            var satEncoding = new List<BoolExpr>();
-                        
+            if (satEncoding == null)
+                satEncoding = new List<BoolExpr>();
+
             satEncoding.Add(node.expression);
-            foreach(var child in node.Children)
+            foreach (var child in node.Children)
             {
-                SATEncodeTempLight1(child, context);
+                if(!child.IsHole)
+                    SATEncodeTempLight1(child, context, satEncoding);
             }
 
-            return satEncoding;            
+            return satEncoding;
         }
 
-            public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
+        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
         {
             if (specList == null)
                 specList = new List<ProgramNode>();

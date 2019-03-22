@@ -104,17 +104,18 @@ namespace CSharpTree
             this.rule = null;
 
             Children = new List<TreeNode<T>>();
-
+            holes = new Stack<string>();
         }
 
-        public void FillHole(T child, int arity, int times, Production rule)
+        public void FillHole(T child, Production rule)
         {
             //var childNode = this.Children.FirstOrDefault(x => x.IsHole);
             //childNode.Data = child;
-
+            var times = rule.rightHandSide.Count() - 1;
             this.Data = child;
 
             this.rule = rule;
+            this.holes = new Stack<string>(rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1));
 
             times.Times(() =>
             {

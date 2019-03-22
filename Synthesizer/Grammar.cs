@@ -98,10 +98,10 @@ namespace Synthesis
                 }
         }
 
-        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        public TreeNode<string> generateRandomAssignment(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context, Grammar grammar)
         {
             
-            currentNode = generateRandomAssignment_AST(currentNode, lemmas, z3ComponentSpecs, context);
+            currentNode = generateRandomAssignment_AST111(currentNode, lemmas, z3ComponentSpecs, context, grammar);
             //generateIndexes(currentNode, context);
 
             return currentNode;
@@ -153,7 +153,7 @@ namespace Synthesis
                 }
             }
 
-        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context)
+        private TreeNode<string> generateRandomAssignment_AST(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context, Grammar grammar)
         {
             var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
 
@@ -193,7 +193,7 @@ namespace Synthesis
 
                 var holeToFill = currentNode.IsHole ? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
 
-                holeToFill.FillHole(terminal, choosenProductionRule.arity, choosenProductionRule.rightHandSide.Count() - 1, choosenProductionRule);
+                holeToFill.FillHole(terminal, choosenProductionRule);
 
                 generateIndexes(root, context);
                 var satEncodedProgram = SATEncoder<string>.SATEncodeTempLight(root, context);
@@ -213,6 +213,65 @@ namespace Synthesis
                 if (!holeToFill.IsHole)
                 {
                     currentNode.holes = new Stack<string>(choosenProductionRule.rightHandSide.GetRange(1, choosenProductionRule.rightHandSide.Count() - 1));
+                    return holeToFill;
+                }
+            }
+            return null;
+        }
+
+        private bool RuleResultsInLeaf(Grammar grammar, Production rule)
+        {
+            return (grammar.nonTerminals.Where(x => rule.rightHandSide.Contains(x))?.Count() != 0);
+        }
+
+        private TreeNode<string> generateRandomAssignment_AST111(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context, Grammar grammar)
+        {
+            var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
+
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+
+            var root = currentNode;
+
+            while (possibleProductionRules.Count > 0)
+            {
+                while (root.Parent != null)
+                    root = currentNode.Parent;
+
+                //var index = rand.Next(0, (possibleProductionRules.Count()));
+                var index = 0;
+                var choosenProductionRule = possibleProductionRules.ElementAt(index);
+                
+                var terminal = choosenProductionRule.rightHandSide.First();
+
+                var holeToFill = currentNode.IsHole ? currentNode : currentNode.Children.FirstOrDefault(x => x.IsHole);
+
+                holeToFill.FillHole(terminal, choosenProductionRule);
+                generateIndexes(root, context);
+
+                
+                if (!RuleResultsInLeaf(grammar, choosenProductionRule))
+                {
+                    var satEncodedProgram = SATEncoder<string>.SATEncodeTempLight(root, context);
+                    foreach (var lemma in lemmas)
+                    {
+                        var lemmaAsExpersion = lemma.AsExpression(context);
+                        var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                        if (checkIfUnSAT)
+                        {
+                            holeToFill.MakeHole();
+                            possibleProductionRules.Remove(choosenProductionRule);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    return generateRandomAssignment_AST111(holeToFill, lemmas, z3ComponentSpecs, context, grammar);
+                }
+
+                if (!holeToFill.IsHole)
+                {                        
                     return holeToFill;
                 }
             }

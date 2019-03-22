@@ -17,6 +17,17 @@ namespace Synthesis
         public Lemmas(IEnumerable<Lemma> lemmas) : base(lemmas)
         {
         }
+        public Boolean IsUnSAT(Context context)
+        {
+            if (this.Count == 0)
+                return false;
+
+            var lemmasInConjuction = context.MkAnd
+                (
+                     this.Select(z => z.AsExpression(context))
+                );
+            return SMTSolver.CheckIfUnSAT(context, lemmasInConjuction);
+        }
     }
 
     public class Lemma : List<LemmaClause>
@@ -96,12 +107,14 @@ namespace Synthesis
         public string name;
         public string index;
         public BoolExpr spec;
+        public BoolExpr expression;
 
-        public UnSatCoreClause(string name, string index, BoolExpr spec)
+        public UnSatCoreClause(string name, string index, BoolExpr spec, BoolExpr expression)
         {
             this.name = name;
             this.index = index;
             this.spec = spec;
+            this.expression = expression;
         }
     }
     public class Pair<T, U>
@@ -194,7 +207,7 @@ namespace Synthesis
                 foreach (var clause in programNode.clauses.First)
                 {
                     BoolExpr p = context.MkAnd(
-                        context.MkBoolConst($"{programNode.index}_{programNode.componentName}"),
+                        context.MkBoolConst($"C_{programNode.index}_{programNode.componentName}"),
                         clause);
                     solver.AssertAndTrack(clause, p);
                 }
@@ -221,27 +234,27 @@ namespace Synthesis
                {
 
                    var splitted = x.Args[0].ToString().Replace("|", "").SplitBy("_");
-                   var name = splitted[1];
-                   var index = splitted[0];
+                   var name = splitted[2];
+                   var index = splitted[1];
                    var expression = (BoolExpr)x.Args[1];
                    var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
                    var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
 
-                   return new UnSatCoreClause(name, index, expressionOriginal);
+                   return new UnSatCoreClause(name, index, expressionOriginal, (BoolExpr)x.Args[0]);
                }
                 ).OrderBy(x => Int32.Parse(x.index)).ToList().AsUnSATCore();
 
-                Console.WriteLine("unsat");
-                Console.WriteLine("core: ");
+                //Console.WriteLine("unsat");
+                //Console.WriteLine("core: ");
                 foreach (Expr c in solver.UnsatCore)
                 {
-                    Console.WriteLine("{0}", c);
+                    //Console.WriteLine("{0}", c);
                 }
                 return unSATCore;
             }
             if (result == Status.SATISFIABLE)
             {
-                Console.WriteLine("sat");
+                //Console.WriteLine("sat");
             }
             return new UnSatCore();
         }
