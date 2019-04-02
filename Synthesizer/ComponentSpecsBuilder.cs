@@ -164,7 +164,7 @@ namespace Synthesis
         public const string key_spec = "Spec";
         public static Context context;
 
-        public static List<Tuple<string, string>> Build(string fileName, Context ctx, ProgramSpec programSpec, Grammar grammar)
+        public static List<Z3ComponentSpecs> Build(string fileName, Context ctx, ProgramSpec programSpec, Grammar grammar)
         {
             context = ctx;
             var specContent = GetComponentSpecsFile(fileName);
@@ -207,10 +207,10 @@ namespace Synthesis
             return boolExpr;
         }
 
-        public static List<BoolExpr> GetComponentSpec(Tuple<string, string> componentSpec)
+        public static List<BoolExpr> GetComponentSpec(Z3ComponentSpecs componentSpec)
         {
-            var name = componentSpec.Item1;
-            var specList = componentSpec.Item2.SplitBy(Operators.GetSymbolFor(ELogicalOperators.AND)).Select(x => x.Trim()).ToList();
+            var name = componentSpec.key;
+            var specList = componentSpec.value.SplitBy(Operators.GetSymbolFor(ELogicalOperators.AND)).Select(x => x.Trim()).ToList();
 
             var z3SpecsList = new List<BoolExpr>();
             foreach (var spec in specList)
@@ -250,17 +250,25 @@ namespace Synthesis
             return String.Join(" " + LogicalOperators.operators[ELogicalOperators.AND] + " ", retSpecList);
         }
 
-        private static List<Tuple<string, string>> BuildComponentSpecsFromSpec(XElement componentSpecsXML, ProgramSpec programSpec, Grammar grammar)
+        private static List<Z3ComponentSpecs> BuildComponentSpecsFromSpec(XElement componentSpecsXML, ProgramSpec programSpec, Grammar grammar)
         {
             var componentSpecsList = componentSpecsXML.Descendants(key_componentSpec)
-                .Select(x => 
-                    Tuple.Create(
-                            x.Descendants(key_name).FirstOrDefault().Value.Trim(),
-                            x.Descendants(key_spec).FirstOrDefault().Value.Trim()
-                    )
+                .Select(x =>
+                    new Z3ComponentSpecs() {
+                        key = x.Descendants(key_name).FirstOrDefault().Value.Trim(),
+                        value = x.Descendants(key_spec).FirstOrDefault().Value.Trim(),
+                        type = ComponentType.Component
+                    }
                 ).ToList();
 
-           var ret = programSpec.parameters.Where( x => x.parameterType == ParameterType.Input).Select(x => Tuple.Create(x.obj.ToString(), GetSpecNonComponents(x))).ToList();
+            var ret = programSpec.parameters.Where(x => x.parameterType == ParameterType.Input).Select(
+                x => new Z3ComponentSpecs()
+                {
+                    key = x.obj.ToString(),
+                    value = GetSpecNonComponents(x),
+                    type = ComponentType.Parameter
+                }
+               ).ToList();
             //var ret2 = grammar.types.Select( x => Tuple.Create(x.Item1, x.Item2.obj);
             return componentSpecsList.Union(ret).ToList();            
         }

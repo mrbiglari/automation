@@ -13,10 +13,10 @@
   </types>
 	<production>
 		<rule>
-      N --> head L, x1, x2, tail L, identity L, headExclude L
+      N --> head L, x1, tail L, identity L, headExclude L
     </rule>	
 		<rule>
-			L --> sort L, x1, x2, filter L T, take L N, reverse L
+			L --> sort L, x1, filter L T, take L N, reverse L
 		</rule>
 	    <rule>
 			T --> leqz, gteqz, eqz

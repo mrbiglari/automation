@@ -32,6 +32,7 @@ namespace Synthesis
 
     public class Lemma : List<LemmaClause>
     {
+        public int lemmaLength;
         public Lemma()
         {
         }

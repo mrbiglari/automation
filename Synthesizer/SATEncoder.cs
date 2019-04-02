@@ -9,6 +9,18 @@ using static Synthesis.UnSatCoreClause;
 
 namespace Synthesis
 {
+    public enum ComponentType
+    {
+        Component,
+        Parameter
+    }
+    public class Z3ComponentSpecs
+    {
+        public string key;
+        public string value;
+        public ComponentType type;
+
+    }
     public class SATEncoder<T>
     {
         //Intermediate Variable Symbol
@@ -113,7 +125,12 @@ namespace Synthesis
             var programSpecAsBoolExprList = new List<ExampleNode>();
             foreach (var example in programSpecAsString)
             {
-                var exampleSpecsAsBoolExprArray = example.Select(x => ComponentSpecsBuilder.GetComponentSpec(Tuple.Create($"parameter_{x.SplitBy(".").FirstOrDefault()}", x)).First()).ToList();
+                var exampleSpecsAsBoolExprArray = example.Select(x => ComponentSpecsBuilder.GetComponentSpec(
+                    new Z3ComponentSpecs()
+                    {
+                        key = $"parameter_{x.SplitBy(".").FirstOrDefault()}",
+                        value = x
+                    }).First()).ToList();
                 //var exampleSpecAsBoolExpr = context.MkAnd(exampleSpecsAsBoolExprArray);
                 programSpecAsBoolExprList.Add(new ExampleNode(exampleSpecsAsBoolExprArray));
             }
@@ -176,12 +193,12 @@ namespace Synthesis
             return satEncoding;
         }
 
-        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Tuple<string, string>> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
+        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Z3ComponentSpecs> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
         {
             if (specList == null)
                 specList = new List<ProgramNode>();
 
-            var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
+            var specAsString = componentSpecs.Where(x => x.key.Equals(node.Data)).FirstOrDefault();
 
             var spec = String.Empty;
 
@@ -189,50 +206,64 @@ namespace Synthesis
             if (specAsString == null)
             {
                 var nodeSpecAsList = grammar.typeConstants.Where(x => x.Item1 == node.Data.ToString()).FirstOrDefault();
-
-                switch(nodeSpecAsList.Item2.argType)
+                if (nodeSpecAsList != null)
                 {
-                    case (ArgType.List):
-                        nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause(x)).ToList();
-                        break;
+                    switch (nodeSpecAsList.Item2.argType)
+                    {
+                        case (ArgType.List):
+                            nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause(x)).ToList();
+                            break;
 
-                    case (ArgType.Int):
-                        nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause(nodeSpecAsList.Item2.obj.ToString()));
-                        break;
+                        case (ArgType.Int):
+                            nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause(nodeSpecAsList.Item2.obj.ToString()));
+                            break;
+                    }
+                }
+                else
+                {
+                    nodeSpec.Add(context.MkBool(true));
                 }
             }
             else
             {
-                var check = componentSpecs.Select(x => x.Item1).Contains(node.Data.ToString());
+                var check = componentSpecs.Select(x => x.key).Contains(node.Data.ToString());
 
                 if (node.IsLeaf && node.IsRoot)
                 {
-                    spec = specAsString.Item2.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
+                    spec = specAsString.value.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
                 }
                 else if (node.IsLeaf)
                 {
                     //spec = GetLeafSpec(programSpec, node);                
                     //spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
 
-                    spec = specAsString.Item2.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{ivs}{node.index}{Symbols.dot}");
+                    spec = specAsString.value.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{ivs}{node.index}{Symbols.dot}");
                     spec = spec.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
                 }
                 else if (node.IsRoot)
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value);
                 }
                 else
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value);
                     spec = spec.Replace(y, ivs + node.index);
                 }
 
                 node.Spec = spec;
 
-                nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
+                nodeSpec = ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
+                {
+                    key = node.Data.ToString(),
+                    value = spec
+                });
             }
             var nodeOriginalSpec = (specAsString != null) ?
-            ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString.Item2)) : null;
+            ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
+            {
+                key = node.Data.ToString(),
+                value = specAsString.value
+            }) : null;
 
             //var nodeOriginalSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), specAsString?.Item2??null));
 
@@ -304,7 +335,7 @@ namespace Synthesis
         //    return specList;
         //}
 
-        public static SMTModel SATEncode(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
+        public static SMTModel SATEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
             return new SMTModel()
             {
@@ -312,7 +343,7 @@ namespace Synthesis
                 satEncodedProgramSpec = SATEncodeProgramSpec(context, programSpec)
             };
         }
-        public static List<ProgramNode> SATEncodeProgram(List<Tuple<string, string>> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
+        public static List<ProgramNode> SATEncodeProgram(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
             var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context, grammar);
 

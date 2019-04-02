@@ -19,7 +19,7 @@ namespace Synthesis
 
         public void GeneratePartialPrograms()
         {
-            var z3ComponentsSpecs = new List<Tuple<string, string>>();
+            var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
 
@@ -72,12 +72,12 @@ namespace Synthesis
                             lemmaClause = new LemmaClause();
                             lemmaClause.Add(context.MkNot(clause.expression));
 
-                            if (clause.spec != null)
+                            if (clause.spec != null && z3ComponentsSpecs.Any(x => x.key == clause.name && x.type != ComponentType.Parameter))
                             {
                                 foreach (var component in componentsToCheck)
                                 {
                                     
-                                    var componentSpec = z3ComponentsSpecs.Where(x => x.Item1 == component).FirstOrDefault();
+                                    var componentSpec = z3ComponentsSpecs.Where(x => x.key == component).FirstOrDefault();
                                     if (componentSpec != null)
                                     {
                                         var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
@@ -99,6 +99,7 @@ namespace Synthesis
                                 }
                             }
                             lemmaSub.Add(lemmaClause);
+                            lemmaSub.lemmaLength = unSATCores.SelectMany( x => x).Max(x => x.index).ToInt();
                             lemmas.Add(lemmaSub);
                         }
 
@@ -131,7 +132,7 @@ namespace Synthesis
         }
         public void GenerateConcretePrograms()
         {
-            var z3ComponentsSpecs = new List<Tuple<string, string>>();
+            var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
                 var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);

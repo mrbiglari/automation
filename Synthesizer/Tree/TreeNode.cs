@@ -115,7 +115,9 @@ namespace CSharpTree
             this.Data = child;
 
             this.rule = rule;
-            this.holes = new Stack<string>(rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1));
+            var holesAsList = rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1);
+            holesAsList.Reverse();
+            this.holes = new Stack<string>(holesAsList);
 
             times.Times(() =>
             {

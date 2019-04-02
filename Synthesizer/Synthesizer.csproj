@@ -87,6 +87,7 @@
     <Compile Include="ComponentSpec.cs" />
     <Compile Include="ComponentSpec1.cs" />
     <Compile Include="ComponentSpecs.cs" />
+    <Compile Include="LemmaHelper.cs" />
     <Compile Include="ProgramSpecBuilder.cs" />
     <Compile Include="ComponentSpecsBuilder.cs" />
     <Compile Include="GrammarBuilder.cs" />
