@@ -105,8 +105,13 @@ namespace Synthesis
 
                         if (currentNode.Parent != null)
                         {
-                            currentNode.Parent.Children.Remove(currentNode);
+                            //currentNode.Parent.Children.Remove(currentNode);
+                            var index = currentNode.Parent.Children.IndexOf(currentNode);
                             currentNode = currentNode.Parent;
+                            currentNode.holes.Push(currentNode.holesBackTrack.Pop());
+                            currentNode.Children[index].MakeHole();
+
+                            
                         }
                         else
                         {
@@ -120,6 +125,7 @@ namespace Synthesis
 
                     if (programRoot.IsConcrete)
                     {
+                        programRoot.Visualize();
                         programRoot = new TreeNode<string>();
                         currentNode = programRoot;
                         lemmas.Clear();

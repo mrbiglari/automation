@@ -12,11 +12,12 @@ namespace CSharpTree
         public T Data { get; set; }
         public string Spec;
         public TreeNode<T> Parent { get; set; }
-        public ICollection<TreeNode<T>> Children { get; set; }
+        public List<TreeNode<T>> Children { get; set; }
         public int index;
         public int arity;
         public Production rule;
         public Stack<string> holes;
+        public Stack<string> holesBackTrack;
         public BoolExpr expression;
 
         public Boolean IsHole
@@ -66,7 +67,7 @@ namespace CSharpTree
         public TreeNode(T data)
         {
             this.Data = data;
-            this.Children = new LinkedList<TreeNode<T>>();
+            this.Children = new List<TreeNode<T>>();
             //this.Children = new LinkedList<TreeNode<T>>() { new TreeNode<T>() };
             //this.Children.Add(new TreeNode<T>());
             //this.holes = new Stack<string>(new List<string>() { "N" });           
@@ -75,7 +76,7 @@ namespace CSharpTree
         }
         public TreeNode()
         {
-            this.Children = new LinkedList<TreeNode<T>>();
+            this.Children = new List<TreeNode<T>>();
 
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
@@ -105,6 +106,7 @@ namespace CSharpTree
 
             Children = new List<TreeNode<T>>();
             holes = new Stack<string>();
+            holesBackTrack = new Stack<string>();
         }
 
         public void FillHole(T child, Production rule)
@@ -118,6 +120,7 @@ namespace CSharpTree
             var holesAsList = rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1);
             holesAsList.Reverse();
             this.holes = new Stack<string>(holesAsList);
+            this.holesBackTrack = new Stack<string>();
 
             times.Times(() =>
             {

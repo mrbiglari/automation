@@ -161,7 +161,11 @@ namespace Synthesis
             if (currentNode.holes?.Count() == 0)
                 return generateRandomAssignment_AST(currentNode.Parent, lemmas, z3ComponentSpecs, context, grammar);
 
-                var currentLeftHandSide = currentNode.holes == null ? "N" : currentNode.holes.Pop();
+            var condition = currentNode.holes == null;
+            var currentLeftHandSide = condition ? "N" : currentNode.holes.Pop();
+
+            if(!condition)
+                currentNode.holesBackTrack.Push(currentLeftHandSide);
 
             var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
 
