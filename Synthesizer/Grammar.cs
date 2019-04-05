@@ -211,6 +211,7 @@ namespace Synthesis
                     var satEncodedProgram = SATEncoder<string>.SATEncodeTempLight(root, context);
                     foreach (var lemma in lemmas)
                     {
+                        //checking consistency with the knoweldge base
                         var lemmaAsExpersion = lemma.AsExpression(context);
                         var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
                         var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
