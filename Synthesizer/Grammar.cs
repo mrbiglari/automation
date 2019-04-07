@@ -23,7 +23,7 @@ namespace Synthesis
         public List<Tuple<string, Parameter>> typeConstants;
 
         //private Random rand = new Random(1);
-        private Random rand = new Random(5);
+        private Random rand;
 
 
         public void addNonTerminalSymbol(string nonTerminalSymbol)
@@ -40,7 +40,7 @@ namespace Synthesis
             terminals = new List<string>();
             productions = new List<Production>();
         }
-        public Grammar(string startSymbol, List<string> nonTerminals, List<string> terminals, List<Production> productions, int maxArity, List<Tuple<string, Parameter>> typeConstants)
+        public Grammar(string startSymbol, List<string> nonTerminals, List<string> terminals, List<Production> productions, int maxArity, List<Tuple<string, Parameter>> typeConstants, Random rand)
         {
             this.startSymbol = startSymbol;
             this.nonTerminals = nonTerminals;
@@ -48,6 +48,7 @@ namespace Synthesis
             this.productions = productions;
             this.maxArity = maxArity;
             this.typeConstants = typeConstants;
+            this.rand = rand;
         }
         public void addProduction(string lhs, List<string> rhs, int arity)
         {
@@ -162,7 +163,7 @@ namespace Synthesis
                 return generateRandomAssignment_AST(currentNode.Parent, lemmas, z3ComponentSpecs, context, grammar);
 
             var condition = currentNode.holes == null;
-            var currentLeftHandSide = condition ? "N" : currentNode.holes.Pop();
+            var currentLeftHandSide = condition ? grammar.startSymbol : currentNode.holes.Pop();
 
             if(!condition)
                 currentNode.holesBackTrack.Push(currentLeftHandSide);
@@ -206,7 +207,7 @@ namespace Synthesis
                 holeToFill.FillHole(terminal, choosenProductionRule);
 
                 generateIndexes(root, context);
-                if (!RuleResultsInLeaf(grammar, choosenProductionRule))
+                if (RuleResultsInLeaf(grammar, choosenProductionRule))
                 {
                     var satEncodedProgram = SATEncoder<string>.SATEncodeTempLight(root, context);
                     foreach (var lemma in lemmas)
@@ -224,7 +225,10 @@ namespace Synthesis
                     }
                 }
                 if (!holeToFill.IsHole)
-                {                    
+                {
+                    if (!RuleResultsInLeaf(grammar, holeToFill.rule))                    
+                        productions.Remove(holeToFill.rule);
+
                     return holeToFill;
                 }
             }
@@ -233,7 +237,8 @@ namespace Synthesis
 
         private bool RuleResultsInLeaf(Grammar grammar, Production rule)
         {
-            return (grammar.nonTerminals.Where(x => rule.rightHandSide.Contains(x))?.Count() != 0);
+            var check =(grammar.nonTerminals.Where(x => rule.rightHandSide.Contains(x))?.Count() == 0);
+            return check;
         }
 
         private TreeNode<string> generateRandomAssignment_AST_WithPropogate(TreeNode<string> currentNode, Lemmas lemmas, List<Tuple<string, string>> z3ComponentSpecs, Context context, Grammar grammar)

@@ -15,7 +15,7 @@ namespace Synthesis
         public const string path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
         public const string path_programSpec = specsFolderPath + "ProgramSpec.xml";
         public const string path_typeSpec = specsFolderPath + "TypeSpec.xml";
-
+        public Random rand = new Random(5);
 
         public void GeneratePartialPrograms()
         {
@@ -23,9 +23,10 @@ namespace Synthesis
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
 
+                
                 var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
-                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs);
+                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
                 var lemmas = new Lemmas();
 
@@ -36,9 +37,12 @@ namespace Synthesis
                 {
                     currentNode = grammar.generateRandomAssignment(currentNode, lemmas, z3ComponentsSpecs, context, grammar);
 
+                    programRoot.Visualize();
+
                     var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SATEncode(z3ComponentsSpecs, context, programSpec, programRoot, grammar);
 
                     var unSATCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
+
 
                     if (unSATCore?.Count != 0)
                     {
@@ -75,13 +79,12 @@ namespace Synthesis
                             if (clause.spec != null && z3ComponentsSpecs.Any(x => x.key == clause.name && x.type != ComponentType.Parameter))
                             {
                                 foreach (var component in componentsToCheck)
-                                {
-                                    
+                                {                                    
                                     var componentSpec = z3ComponentsSpecs.Where(x => x.key == component).FirstOrDefault();
                                     if (componentSpec != null)
                                     {
                                         var z3ComponentSpec = context.MkAnd(ComponentSpecsBuilder.GetComponentSpec(componentSpec));
-
+                                        
                                         var check = context.MkNot(context.MkImplies(z3ComponentSpec, clause.spec));
                                         var lightEncoding = unSATCore.Where(x => x != clause);
                                         if (SMTSolver.CheckIfUnSAT(context, check))
@@ -103,18 +106,26 @@ namespace Synthesis
                             lemmas.Add(lemmaSub);
                         }
 
+                        int index = 0;
+                        while (unSATCore.First().index.ToInt() != currentNode.index)
+                        {
+                            grammar.productions.Add(currentNode.rule);
+                            currentNode = currentNode.Parent;
+                        }
+
                         if (currentNode.Parent != null)
                         {
                             //currentNode.Parent.Children.Remove(currentNode);
-                            var index = currentNode.Parent.Children.IndexOf(currentNode);
+                            grammar.productions.Add(currentNode.rule);
+                            index = currentNode.Parent.Children.IndexOf(currentNode);
                             currentNode = currentNode.Parent;
-                            currentNode.holes.Push(currentNode.holesBackTrack.Pop());
-                            currentNode.Children[index].MakeHole();
 
-                            
+                            currentNode.holes.Push(currentNode.holesBackTrack.Pop());
+                            currentNode.Children[index].MakeHole();                            
                         }
                         else
                         {
+                            grammar.productions.Add(currentNode.rule);
                             programRoot = new TreeNode<string>();
                             currentNode = programRoot;
                         }
@@ -125,14 +136,16 @@ namespace Synthesis
 
                     if (programRoot.IsConcrete)
                     {
-                        programRoot.Visualize();
+                        //programRoot.Visualize();
+                        Console.WriteLine("#######################################");
                         programRoot = new TreeNode<string>();
                         currentNode = programRoot;
                         lemmas.Clear();
                         unSATCores.Clear();
+                        grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
                     }
 
-                    programRoot.Visualize();
+                    //programRoot.Visualize();
                 }
             }
         }
@@ -143,7 +156,7 @@ namespace Synthesis
             {
                 var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
-                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs);
+                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
                 var counter = 1;
                 while (true)

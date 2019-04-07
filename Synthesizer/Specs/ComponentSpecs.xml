@@ -33,7 +33,7 @@
 	</ComponentSpec>
 	<ComponentSpec>
 		<Name>
-			min
+			minimum
 		</Name>
 		<Spec>
 			 x.size > 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ y.min = x.min
@@ -41,7 +41,7 @@
 	</ComponentSpec>
 	<ComponentSpec>
 		<Name>
-			max
+			maximum
 		</Name>
 		<Spec>
 			x.size > 1 ∧ y.size = 1 ∧ x.max = y.max ∧ y.min ≥ x.min 
@@ -121,15 +121,7 @@
   </ComponentSpec>
   <ComponentSpec>
     <Name>
-      headExclude
-    </Name>
-    <Spec>
-      x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.first ∧ y.last = x.first
-    </Spec>
-  </ComponentSpec>
-  <ComponentSpec>
-    <Name>
-      tail
+      last
     </Name>
     <Spec>
       x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.last ∧ y.last = x.last

@@ -21,10 +21,10 @@ namespace Synthesis
         private const string key_rules = "rule";
         private int maxArity;
 
-        public static Grammar Build(string fileName, List<TypeSpec> typeSpec)
+        public static Grammar Build(string fileName, List<TypeSpec> typeSpec, Random rand)
         {
             var specContent = GetGrammarSpecFile(fileName);
-            return BuildGrammarFromSpec(specContent, typeSpec);
+            return BuildGrammarFromSpec(specContent, typeSpec, rand);
         }
 
         private static XElement GetGrammarSpecFile(string fileName)
@@ -34,7 +34,7 @@ namespace Synthesis
             return XElement.Load(grammarSpecFilepath);
         }
 
-        private static Grammar BuildGrammarFromSpec(XElement grammarSpec, List<TypeSpec> typeSpecs)
+        private static Grammar BuildGrammarFromSpec(XElement grammarSpec, List<TypeSpec> typeSpecs, Random rand)
         {
             var countArity = 0;
 
@@ -85,7 +85,7 @@ namespace Synthesis
                 }
 
             }
-            return new Grammar(startSymbol, nonTerminals, terminals, productions, countArity, typeConstants);
+            return new Grammar(startSymbol, nonTerminals, terminals, productions, countArity, typeConstants, rand);
         }
     }
 }
