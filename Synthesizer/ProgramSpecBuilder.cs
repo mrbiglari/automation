@@ -176,17 +176,6 @@ namespace Synthesis
                 var index = (parameters.Count() > 1) ? parameter.Item1 : 0;
 
                 parameterList.Add(new Parameter(parameterType, type, argValueAsString, index));
-                //switch (type)
-                //{
-                //    case ArgType.List:
-                //        var arg = argValueAsString.SplitBy(Symbols.seperator).Select(x => x.Trim()).ToList();
-                        
-                //        parameterL.Add(new Parameter(parameterType, type, arg, index));
-                //        break;
-                //    case ArgType.Int:
-                //        parameterL.Add(new Parameter(parameterType, type, argValueAsString, index));
-                //        break;
-                //}
             }
         }
     }

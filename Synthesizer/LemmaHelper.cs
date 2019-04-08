@@ -7,7 +7,7 @@
 //using System.Text;
 //using System.Threading.Tasks;
 
-//namespace NHibernateDemoApp
+//namespace Synthesizer
 //{
 //    public class LemmaHelper<T>
 //    {

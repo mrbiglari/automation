@@ -61,10 +61,10 @@ namespace Synthesis
 
         public BoolExpr AsAnd(Context context)
         {
-            if(this.Count > 1)
-            return context.MkAnd(this);
+            if (this.Count > 1)
+                return context.MkAnd(this);
             else
-            return this.First();
+                return this.First();
 
         }
 
@@ -197,66 +197,71 @@ namespace Synthesis
             return (result == Status.UNSATISFIABLE);
         }
 
-            public static UnSatCore SMTSolve(Context context, SMTModel model)
+        public static UnSatCore SMTSolve(Context context, SMTModel model)
         {
-            var satEncodedProgramSpecInstance = model.satEncodedProgramSpec.FirstOrDefault();
-
-            var solver = InitializeSolver(context);
-
-            foreach (var programNode in model.satEncodedProgram)
+            foreach (var example in model.satEncodedProgramSpec)
             {
-                foreach (var clause in programNode.clauses.First)
+                //var satEncodedProgramSpecInstance = model.satEncodedProgramSpec.FirstOrDefault();
+
+                var solver = InitializeSolver(context);
+
+                foreach (var programNode in model.satEncodedProgram)
                 {
-                    BoolExpr p = context.MkAnd(
-                        context.MkBoolConst($"C_{programNode.index}_{programNode.componentName}"),
-                        clause);
-                    solver.AssertAndTrack(clause, p);
+                    foreach (var clause in programNode.clauses.First)
+                    {
+                        BoolExpr p = context.MkAnd(
+                            context.MkBoolConst($"C_{programNode.index}_{programNode.componentName}"),
+                            clause);
+                        solver.AssertAndTrack(clause, p);
+                    }
+                }
+
+
+
+                foreach (var clause in example.clauses)
+                {
+                    solver.AssertAndTrack(clause, clause);
+                }
+
+
+                //var result = solver.Check(assumptions);
+                var result = solver.Check();
+
+                if (result == Status.UNSATISFIABLE)
+                {
+
+                    var UNSATCoreExcludedProgramSpec = solver.UnsatCore.Where(x => !example.clauses.Contains(x)).ToList();
+                    var unSATCore = UNSATCoreExcludedProgramSpec.Select(x =>
+                    {
+
+                        var splitted = x.Args[0].ToString().Replace("|", "").SplitBy("_");
+                        var name = splitted[2];
+                        var index = splitted[1];
+                        var expression = (BoolExpr)x.Args[1];
+                        var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
+                        var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
+
+                        return new UnSatCoreClause(name, index, expressionOriginal, (BoolExpr)x.Args[0]);
+                    }
+                    ).OrderBy(x => Int32.Parse(x.index)).ToList().AsUnSATCore();
+
+                    //Console.WriteLine("unsat");
+                    //Console.WriteLine("core: ");
+                    foreach (Expr c in solver.UnsatCore)
+                    {
+                        //Console.WriteLine("{0}", c);
+                    }
+                    return unSATCore;
+                }
+                if (result == Status.SATISFIABLE)
+                {
+                    //Console.WriteLine("sat");
                 }
             }
-
-
-            var example = model.satEncodedProgramSpec.First();
+            //var example = model.satEncodedProgramSpec.First();
 
             //var assumptions = context.MkAnd(example.clauses);
-            foreach (var clause in example.clauses)
-            {
-                solver.AssertAndTrack(clause, clause);
-            }
 
-
-            //var result = solver.Check(assumptions);
-            var result = solver.Check();
-
-            if (result == Status.UNSATISFIABLE)
-            {
-
-                var UNSATCoreExcludedProgramSpec = solver.UnsatCore.Where(x => !example.clauses.Contains(x)).ToList();
-                var unSATCore = UNSATCoreExcludedProgramSpec.Select(x =>
-               {
-
-                   var splitted = x.Args[0].ToString().Replace("|", "").SplitBy("_");
-                   var name = splitted[2];
-                   var index = splitted[1];
-                   var expression = (BoolExpr)x.Args[1];
-                   var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
-                   var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
-
-                   return new UnSatCoreClause(name, index, expressionOriginal, (BoolExpr)x.Args[0]);
-               }
-                ).OrderBy(x => Int32.Parse(x.index)).ToList().AsUnSATCore();
-
-                //Console.WriteLine("unsat");
-                //Console.WriteLine("core: ");
-                foreach (Expr c in solver.UnsatCore)
-                {
-                    //Console.WriteLine("{0}", c);
-                }
-                return unSATCore;
-            }
-            if (result == Status.SATISFIABLE)
-            {
-                //Console.WriteLine("sat");
-            }
             return new UnSatCore();
         }
     }

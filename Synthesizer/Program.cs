@@ -17,21 +17,20 @@ namespace Synthesis
         public const string path_typeSpec = specsFolderPath + "TypeSpec.xml";
         public Random rand = new Random(5);
 
-        public void GeneratePartialPrograms()
+        public void GeneratePartialPrograms(int demand)
         {
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {
-
-                
+            {                
                 var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
                 var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
-                var lemmas = new Lemmas();
-
                 var unSATCores = new UnSatCores();
+                var numberOfPrograms = 0;
+
                 var programRoot = new TreeNode<string>();
+                var lemmas = new Lemmas();
                 var currentNode = programRoot;
                 while (true)
                 {
@@ -135,14 +134,20 @@ namespace Synthesis
                         return;
 
                     if (programRoot.IsConcrete)
-                    {
-                        //programRoot.Visualize();
+                    {                                                
+                        Console.WriteLine("\nConcrete progam found:");
+                        programRoot.Visualize();
                         Console.WriteLine("#######################################");
                         programRoot = new TreeNode<string>();
                         currentNode = programRoot;
                         lemmas.Clear();
                         unSATCores.Clear();
                         grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
+
+                        if (numberOfPrograms + 1 == demand)
+                            break;
+                        else
+                            numberOfPrograms++;
                     }
 
                     //programRoot.Visualize();
@@ -177,10 +182,15 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-
             var program = new Program();
             //program.GenerateConcretePrograms();
-            program.GeneratePartialPrograms();
+            while (true)
+            {
+                Console.Write("Please specify the amount of concrete programs:");
+                var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
+                program.GeneratePartialPrograms(numberOfPrograms);
+            }
+
         }
     }
 }

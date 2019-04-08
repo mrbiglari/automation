@@ -2,29 +2,13 @@
   <ProgramDefinition>
     list(x1), int(x2) -- list(y)
   </ProgramDefinition>
-	<InputArgs>
-		<Arg>
-			<Type>
-				list
-			</Type>
-			<Properties>
-				max, min, size, first, last	
-			</Properties>
-		</Arg>
-		<Arg>
-			<Type>
-				int
-			</Type>
-		</Arg>
-	</InputArgs>  
 	<Example>
 		<Input>
       list(1'34'15'6'10) -- int(2)
     </Input>
 		<Output>
 			list(49)
-		</Output>
-		
+		</Output>		
 	</Example>
 
 	<Example>
