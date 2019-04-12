@@ -1,0 +1,130 @@
+<ComponentSpecs>
+	<ComponentSpec>
+		<Name>
+			head
+		</Name>
+		<Spec>
+			x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.first ∧ y.last = x.first
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			last
+		</Name>
+		<Spec>
+			x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.last ∧ y.last = x.last 
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			take
+		</Name>
+		<Spec>
+			x1.size > y.size ∧ x1.max ≥ y.max ∧ x1.min ≤ y.min ∧ x2 > 0 ∧ x1.size > x2 ∧ x1.first = y.first 
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			drop
+		</Name>
+		<Spec>
+			x1.size > y.size ∧ x1.max ≥ y.max ∧ x1.min ≤ y.min ∧ x2 > 0 ∧ x1.size > x2 ∧ x1.last = y.last 
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			minimum
+		</Name>
+		<Spec>
+			 x.size > 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ y.min = x.min
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			maximum
+		</Name>
+		<Spec>
+			x.size > 1 ∧ y.size = 1 ∧ x.max = y.max ∧ y.min ≥ x.min 
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			reverse
+		</Name>
+		<Spec>
+			y.size = x.size ∧ y.size > 1 ∧ x.size > 1 ∧ x.max = y.max ∧ x.min = y.min ∧ x.first = y.last ∧ x.last = y.first
+		</Spec>
+	</ComponentSpec>
+	<ComponentSpec>
+		<Name>
+			sort
+		</Name>
+		<Spec>
+			y.size = x.size ∧ y.size > 1 ∧ x.size > 1 ∧ x.max = y.max ∧ x.min = y.min
+		</Spec>
+	</ComponentSpec>			
+	<ComponentSpec>
+		<Name>
+			sum
+		</Name>
+		<Spec>
+      x.size ≥ 1 ∧ y.size = 1
+      </Spec>
+	</ComponentSpec>	
+	<ComponentSpec>
+		<Name>
+			access
+		</Name>
+		<Spec>
+			x1.size ≥ 1 ∧ y.size = 1 ∧ x1.max ≥ y.max ∧ x1.min ≤ y.min ∧ x2 > 0 ∧ x1.size > x2
+		</Spec>
+	</ComponentSpec>	
+	<ComponentSpec>
+		<Name>
+			filter
+		</Name>
+		<Spec>
+			x1.size > y.size ∧ y.max ≤ x1.max ∧ y.min ≥ x1.min
+		</Spec>
+	</ComponentSpec>	
+	<ComponentSpec>
+		<Name>
+			count
+		</Name>
+		<Spec>
+			x.size > 1 ∧ y.size = 1 ∧ y.first ≥ 0 ∧ y.first ≤ x.size 
+		</Spec>
+	</ComponentSpec>	
+	<ComponentSpec>
+		<Name>
+			map
+		</Name>
+		<Spec>
+			y.size = x.size
+		</Spec>
+	</ComponentSpec>	
+	<ComponentSpec>
+		<Name>
+			scanl1
+		</Name>
+		<Spec>
+			y.size = x.size ∧ y.first = x.first
+		</Spec>
+	</ComponentSpec>
+  <ComponentSpec>
+    <Name>
+      identity
+    </Name>
+    <Spec>
+      y.size = x.size ∧ y.first = x.first ∧ y.last = x.last ∧ y.max = x.max ∧ y.min = x.min
+    </Spec>
+  </ComponentSpec>
+  <ComponentSpec>
+    <Name>
+      last
+    </Name>
+    <Spec>
+      x.size ≥ 1 ∧ y.size = 1 ∧ x.max ≥ y.max ∧ x.min ≤ y.min ∧ y.first = x.last ∧ y.last = x.last
+    </Spec>
+  </ComponentSpec>
+</ComponentSpecs>
