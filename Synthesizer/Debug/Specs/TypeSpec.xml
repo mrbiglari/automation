@@ -1,0 +1,18 @@
+<Types>
+  <Type>
+    <TypeName>
+      list
+    </TypeName>
+    <Properties>
+      max, min, size, first, last
+    </Properties>
+  </Type>
+
+  <Type>
+    <TypeName>
+      int
+    </TypeName>
+    <Properties>
+    </Properties>
+  </Type>
+</Types>
