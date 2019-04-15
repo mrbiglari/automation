@@ -17,16 +17,21 @@ namespace Synthesis
         public Lemmas(IEnumerable<Lemma> lemmas) : base(lemmas)
         {
         }
+        public BoolExpr LemmasInConjunction(Context context)
+        {
+            if (this.Count() == 1)
+                return this.Select(z => z.AsExpression(context)).First();
+            else
+                return context.MkAnd(this.Select(z => z.AsExpression(context)));
+            
+        }
+
         public Boolean IsUnSAT(Context context)
         {
             if (this.Count == 0)
                 return false;
 
-            var lemmasInConjuction = context.MkAnd
-                (
-                     this.Select(z => z.AsExpression(context))
-                );
-            return SMTSolver.CheckIfUnSAT(context, lemmasInConjuction);
+            return SMTSolver.CheckIfUnSAT(context, LemmasInConjunction(context));
         }
     }
 

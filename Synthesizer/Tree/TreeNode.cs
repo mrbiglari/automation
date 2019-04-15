@@ -20,6 +20,19 @@ namespace CSharpTree
         public Stack<string> holesBackTrack;
         public BoolExpr expression;
 
+        public List<TreeNode<T>> Holes(List<TreeNode<T>> holes = null)
+        {
+            if (holes == null)
+                holes = new List<TreeNode<T>>();
+            foreach(var child in Children)
+            {
+                if (child.IsHole)
+                    holes.Add(child);
+                child.Holes(holes);
+            }
+            return holes;
+        }
+
         public Boolean IsHole
         {
             get { return Children.Count == 0 && Data == null; }
@@ -109,12 +122,12 @@ namespace CSharpTree
             holesBackTrack = new Stack<string>();
         }
 
-        public void FillHole(T child, Production rule)
+        public void FillHole(T componentName, Production rule)
         {
             //var childNode = this.Children.FirstOrDefault(x => x.IsHole);
             //childNode.Data = child;
             var times = rule.rightHandSide.Count() - 1;
-            this.Data = child;
+            this.Data = componentName;
 
             this.rule = rule;
             var holesAsList = rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1);

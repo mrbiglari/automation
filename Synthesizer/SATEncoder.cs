@@ -335,7 +335,7 @@ namespace Synthesis
         //    return specList;
         //}
 
-        public static SMTModel SATEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
+        public static SMTModel SMTEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
             return new SMTModel()
             {

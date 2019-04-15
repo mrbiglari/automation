@@ -12,7 +12,10 @@ namespace Synthesis
         public string leftHandSide;
         public List<string> rightHandSide;
         public int arity;
-
+        public string component
+        {
+            get { return rightHandSide.First(); }
+        }
         public Production(string lhs, List<string> rhs, int arity)
         {
             leftHandSide = lhs;

@@ -68,8 +68,8 @@
 			sum
 		</Name>
 		<Spec>
-			x.size ≥ 1 ∧ y.size = 1
-		</Spec>
+      x.size ≥ 1 ∧ y.size = 1
+      </Spec>
 	</ComponentSpec>	
 	<ComponentSpec>
 		<Name>
