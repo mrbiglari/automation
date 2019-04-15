@@ -62,10 +62,8 @@ namespace Synthesis
         {
             string after;
             if (spec.Contains($"{x}{ops}"))
-                //after = ivs + node.Children.ElementAt(index - 1).index + ops;
                 after = ivs + calculateIndex(node, index) + ops;
             else
-                //after = ivs + node.Children.ElementAt(index - 1).index;
                 after = ivs + calculateIndex(node, index);
 
             return after;
@@ -74,7 +72,6 @@ namespace Synthesis
         public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec)
         {
             for (int i = 1; i < node.Children.Count + 1; i++)
-            //for (int i = 1; i < node.holes.Count + 1; i++)
             {
                 var before = Before(node, spec, i);
                 var after = After(node, spec, i);
@@ -131,7 +128,6 @@ namespace Synthesis
                         key = $"parameter_{x.SplitBy(".").FirstOrDefault()}",
                         value = x
                     }).First()).ToList();
-                //var exampleSpecAsBoolExpr = context.MkAnd(exampleSpecsAsBoolExprArray);
                 programSpecAsBoolExprList.Add(new ExampleNode(exampleSpecsAsBoolExprArray));
             }
 
@@ -168,26 +164,29 @@ namespace Synthesis
             return programSpecAsString;
         }
 
-        public static BoolExpr SATEncodeTempLight(TreeNode<T> node, Context context)
+        public static BoolExpr SATEncode(TreeNode<T> node, Context context)
         {
-            var expressions = SATEncodeTempLight1(node, context);
-
-            if (expressions.Count > 1)
+            
+                var expressions = satEncode(node, context);
+            if (expressions.Any(x => x == null))
+                ;
+                if (expressions.Count > 1)
                 return context.MkAnd(expressions);
             else
                 return expressions.First();
         }
 
-        public static List<BoolExpr> SATEncodeTempLight1(TreeNode<T> node, Context context, List<BoolExpr> satEncoding = null)
+        public static List<BoolExpr> satEncode(TreeNode<T> node, Context context, List<BoolExpr> satEncoding = null)
         {
             if (satEncoding == null)
                 satEncoding = new List<BoolExpr>();
 
-            satEncoding.Add(node.expression);
+            if (!node.IsHole)
+                satEncoding.Add(node.expression);
             foreach (var child in node.Children)
             {
                 if(!child.IsHole)
-                    SATEncodeTempLight1(child, context, satEncoding);
+                    satEncode(child, context, satEncoding);
             }
 
             return satEncoding;
@@ -278,62 +277,7 @@ namespace Synthesis
             }
 
             return specList;
-        }
-
-        //public static List<ComponentSpec> GenerateZ3Expression(TreeNode<T> node, Context context, ProgramSpec programSpec, List<ComponentSpec> satEncodingList = null)
-        //{
-        //    if (satEncodingList == null)
-        //        satEncodingList = new List<ComponentSpec>();
-
-        //    var spec = node.Spec;
-
-        //    if (node.IsLeaf)
-        //    {
-        //        spec = GetLeafSpec(programSpec, node);
-        //    }
-
-        //    var nodeSpec = ComponentSpecsBuilder.GetComponentSpec(Tuple.Create(node.Data.ToString(), spec));
-
-        //    satEncodingList.Add(nodeSpec);
-        //    foreach (var child in node.Children)
-        //    {
-        //        GenerateZ3Expression(child, context, programSpec, satEncodingList);
-        //    }
-
-        //    return satEncodingList;
-        //}
-
-        //public static List<string> SATEncode(TreeNode<T> node, List<Tuple<string, string>> componentSpecs, Context context, List<string> specList = null)
-        //{
-        //    if (specList == null)
-        //        specList = new List<string>();
-
-        //    var specAsString = componentSpecs.Where(x => x.Item1.Equals(node.Data)).FirstOrDefault();
-        //    var spec = String.Empty;
-
-        //    if (node.IsLeaf)
-        //    {
-        //        spec = node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index;
-        //    }
-        //    else if (node.IsRoot)
-        //    {
-        //        spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
-        //    }
-        //    else
-        //    {
-        //        spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
-        //        spec = spec.Replace(y, ivs + node.index);
-        //    }
-
-        //    node.Spec = spec;
-        //    specList.Add(spec);
-        //    foreach (var child in node.Children)
-        //    {
-        //        SATEncode(child, componentSpecs, context, specList);
-        //    }
-
-        //    return specList;
-        //}
+        }        
 
         public static SMTModel SMTEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
@@ -346,10 +290,6 @@ namespace Synthesis
         public static List<ProgramNode> SATEncodeProgram(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
         {
             var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context, grammar);
-
-            //var satEncodings = GenerateZ3Expression(programRoot, context, programSpec);
-            //var satEncoding = context.MkAnd(satEncodings.Select(x => x.spec).ToArray());
-            //var satEncoding = context.MkAnd(satEncodingList.ToArray());
             return satEncodingList;
         }
 

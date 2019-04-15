@@ -19,11 +19,13 @@ namespace Synthesis
         }
         public BoolExpr LemmasInConjunction(Context context)
         {
+            if (this.Count() == 0)
+                return context.MkBool(true);
+
             if (this.Count() == 1)
                 return this.Select(z => z.AsExpression(context)).First();
             else
-                return context.MkAnd(this.Select(z => z.AsExpression(context)));
-            
+                return context.MkAnd(this.Select(z => z.AsExpression(context)));            
         }
 
         public Boolean IsUnSAT(Context context)
@@ -47,6 +49,10 @@ namespace Synthesis
         public BoolExpr AsExpression(Context context)
         {
             var expressions = this.Select(x => x.AsAnd(context));
+
+            if (expressions.Count() == 0)
+                return context.MkBool(true);
+
             if (expressions.Count() > 1)
                 return context.MkOr(expressions);
             else
@@ -66,6 +72,9 @@ namespace Synthesis
 
         public BoolExpr AsAnd(Context context)
         {
+            if (this.Count() == 0)
+                return context.MkBool(true);
+
             if (this.Count > 1)
                 return context.MkAnd(this);
             else

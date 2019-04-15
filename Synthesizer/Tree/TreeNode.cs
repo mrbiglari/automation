@@ -62,11 +62,6 @@ namespace CSharpTree
             return isHole;
         }
 
-        //public Boolean IsLeaf
-        //{
-        //    get { return Children.Count(x => x.Data != null) != Children.Count(); }
-        //}
-
         public int Level
         {
             get
@@ -80,10 +75,7 @@ namespace CSharpTree
         public TreeNode(T data)
         {
             this.Data = data;
-            this.Children = new List<TreeNode<T>>();
-            //this.Children = new LinkedList<TreeNode<T>>() { new TreeNode<T>() };
-            //this.Children.Add(new TreeNode<T>());
-            //this.holes = new Stack<string>(new List<string>() { "N" });           
+            this.Children = new List<TreeNode<T>>();     
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
         }
@@ -109,10 +101,8 @@ namespace CSharpTree
             return null;
         }
 
-
         public void MakeHole()
         {
-
             this.Data = default(T) ;
 
             this.rule = null;
@@ -122,10 +112,31 @@ namespace CSharpTree
             holesBackTrack = new Stack<string>();
         }
 
-        public void FillHole(T componentName, Production rule)
+        public int calculateIndex(TreeNode<T> node, int maxArity)
         {
-            //var childNode = this.Children.FirstOrDefault(x => x.IsHole);
-            //childNode.Data = child;
+            int index = 0;
+            if (node.Parent != null)
+            {
+                var parentPositionInRow = ((node.Parent.index) * maxArity);
+                var currentNodePositionInParentsChildrenList = (node.Parent.Children.ToList().IndexOf(node));
+                index = currentNodePositionInParentsChildrenList + parentPositionInRow + 1;
+            }
+            return index;
+        }
+        public void generateIndexes(TreeNode<T> program, Context context, int maxArity)
+        {
+            var node = program;
+            node.index = calculateIndex(node, maxArity);
+            //if (!node.IsHole)
+            //    node.expression = context.MkBoolConst($"C_{node.index}_{node.Data.ToString()}");
+            foreach (var child in node.Children)
+            {
+                generateIndexes(child, context, maxArity);
+            }
+        }
+
+        public void FillHole(T componentName, Production rule, Context context, Grammar grammar)
+        {
             var times = rule.rightHandSide.Count() - 1;
             this.Data = componentName;
 
@@ -134,30 +145,26 @@ namespace CSharpTree
             holesAsList.Reverse();
             this.holes = new Stack<string>(holesAsList);
             this.holesBackTrack = new Stack<string>();
-
+            this.expression = context.MkBoolConst($"C_{index}_{Data.ToString()}");
+            this.index = calculateIndex(this, grammar.maxArity);
             times.Times(() =>
             {
                 this.AddChild();
+                Children.Last().index = calculateIndex(Children.Last(), grammar.maxArity);                
             });
-            this.RegisterChildForSearch(this);
-            //return this;
+            this.RegisterChildForSearch(this);            
         }
 
         public TreeNode<T> AddChild(T child, int arity)
         {
             TreeNode<T> childNode = new TreeNode<T>(child) { Parent = this, arity = arity };
             this.Children.Add(childNode);
-
-            //this.RegisterChildForSearch(childNode);
-
             return childNode;
         }
         public TreeNode<T> AddChild()
         {
             TreeNode<T> childNode = new TreeNode<T>() { Parent = this };
-            this.Children.Add(childNode);
-
-            //this.RegisterChildForSearch(childNode);
+            Children.Add(childNode);
 
             return childNode;
         }

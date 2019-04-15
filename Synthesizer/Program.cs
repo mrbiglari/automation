@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
 using CSharpTree;
 using Microsoft.Z3;
 namespace Synthesis
@@ -32,7 +29,6 @@ namespace Synthesis
             var lemma = new Lemma();
             foreach (var clause in unSATCore)
             {
-                // var lemma = new Lemma();
                 var rule = programRoot.GetAtIndex(Int32.Parse(clause.index)).rule;
                 var componentsToCheck = grammar.productions.Where(x => x.leftHandSide == rule.leftHandSide)
                     .Select(x => x.rightHandSide.First()).ToList();
@@ -59,7 +55,7 @@ namespace Synthesis
                         }
                     }
                 }
-                lemma.lemmaLength = unSATCores.SelectMany(x => x).Max(x => x.index).ToInt();
+                //lemma.lemmaLength = unSATCores.SelectMany(x => x).Max(x => x.index).ToInt();
                 lemma.Add(lemmaClause);
             }
             return lemma;
@@ -97,7 +93,7 @@ namespace Synthesis
             return programRoot;
         }
 
-        public void GeneratePartialPrograms(int demand)
+        public void Synthesize(int demand)
         {
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
@@ -106,7 +102,7 @@ namespace Synthesis
                 var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
                 var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
-                unSATCores = new UnSatCores();
+
                 var numberOfPrograms = 0;
 
                 var programRoot = new TreeNode<string>();
@@ -114,16 +110,14 @@ namespace Synthesis
                 var currentNode = programRoot;
                 while (true)
                 {
-                    currentNode = grammar.AssignRandomly(programRoot, lemmas, context, grammar);
-                    //grammar.Propogate(programRoot, lemmas, context, grammar);
+                    currentNode = grammar.Decide(programRoot, lemmas, context, grammar);
                     programRoot.Visualize();
+                    grammar.Propogate(programRoot, lemmas, context, grammar);
 
                     var unSATCore = CheckConflict(z3ComponentsSpecs, context, programSpec, programRoot, grammar);
 
                     if (unSATCore?.Count != 0)
                     {
-                        unSATCores.Add(unSATCore);
-
                         var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, programRoot, grammar);
                         lemmas.Add(lemma);
 
@@ -141,7 +135,7 @@ namespace Synthesis
                         programRoot = new TreeNode<string>();
                         currentNode = programRoot;
                         lemmas.Clear();
-                        unSATCores.Clear();
+                        //unSATCores.Clear();
                         grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
 
                         if (numberOfPrograms + 1 == demand)
@@ -149,46 +143,17 @@ namespace Synthesis
                         else
                             numberOfPrograms++;
                     }
-
-                    //programRoot.Visualize();
                 }
             }
         }
-        public void GenerateConcretePrograms()
-        {
-            var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
-            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {
-                var typeSpecs = TypeSpecBuilder.Build(path_typeSpec, context);
-                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
-                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
-                var counter = 1;
-                while (true)
-                {
-                    if (counter % 100 == 0)
-                        Console.ReadLine();
-                    var program = grammar.generateRandomProgram();
-                    program = program.ChipRoot();
-                    var satEncodedArtifactsAsSMTModel = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, program, grammar);
-
-                    var unsatCore = SMTSolver.SMTSolve(context, satEncodedArtifactsAsSMTModel);
-                    program.Visualize();
-
-                    counter++;
-                }
-            }
-        }
-
         static void Main(string[] args)
         {
             var program = new Program();
-            //program.GenerateConcretePrograms();
             while (true)
             {
                 Console.Write("Please specify the amount of concrete programs:");
                 var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
-                program.GeneratePartialPrograms(numberOfPrograms);
+                program.Synthesize(numberOfPrograms);
             }
 
         }
