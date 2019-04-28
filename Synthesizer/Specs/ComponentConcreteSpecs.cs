@@ -9,94 +9,141 @@ namespace Synthesizer
     public class ComponentConcreteSpecs
     {
 
-        public Int32 Head(List<int> list)
+        public static Int32 head(List<int> list)
         {
             if (list.Count == 0)
                 throw new Exception("list is empty");
             return list.First();
         }
 
-        public Int32 Last(List<int> list)
+        public static Int32 last(List<int> list)
         {
             if (list.Count == 0)
                 throw new Exception("list is empty");
             return list.Last();
         }
 
-        public List<int> Take(List<int> list, int n)
+        public static List<int> take(List<int> list, int n)
         {
             if (list.Count < n)
                 return list;
-            return list.GetRange(0, n - 1);
+            return list.GetRange(0, n);
         }
 
-        public List<int> Drop(List<int> list, int n)
+        public static List<int> drop(List<int> list, int n)
         {
             if (list.Count < n)
                 return null;
             return list.GetRange(n, list.Count);
         }
-        public int Access(List<int> list, int n)
+        public static int access(List<int> list, int n)
         {
             if (list.Count < n)
                 throw new ArgumentException("index out of range");
             return list[n+1];
         }
 
-        public int Minimum(List<int> list)
+        public static int minimum(List<int> list)
         {
             if (list.Count == 0)
                 throw new Exception("list is empty");
             return list.Min();
         }
 
-        public int Maximum(List<int> list)
+        public static int maximum(List<int> list)
         {
             if (list.Count == 0)
                 throw new Exception("list is empty");
             return list.Max();
         }
 
-        public List<int> Reverse(List<int> list)
+        public static List<int> reverse(List<int> list)
         {
             list.Reverse();
             return list;
         }
 
-        public List<int> Sort(List<int> list)
+        public static List<int> sort(List<int> list)
         {
             list.Sort();
             return list;
         }
 
-        public int Sum(List<int> list)
+        public static int sum(List<int> list)
         {
             if (list.Count == 0)
                 return 0;
             return list.Sum();
         }
 
-        public delegate int Map_Int_To_Int(int x);
-        
 
-        public List<int> Map(Map_Int_To_Int transform_IntToInt, List<int> list)
+        public static int plus(int x, int y)
         {
-            return list.Select(x => transform_IntToInt(x)).ToList();
+            return x + y;
+        }
+        public static int minus(int x, int y)
+        {
+            return x - y;
+        }
+        public static int mul(int x, int y)
+        {
+            return x * y;
+        }
+        public static int div(int x, int y)
+        {
+            return x / y;
+        }
+        public static int pow(int x, int y)
+        {
+            return (int)Math.Pow(x,y);
+        }
+        public static int max(int x, int y)
+        {
+            return Math.Max(x, y);
+        }
+        public static int min(int x, int y)
+        {
+            return Math.Min(x, y);
+        }
+        //public delegate int Map_Int_To_Int(int x, int y);        
+        public static List<int> map(List<int> list, Func<int, int, int> transform_IntToInt, int y)
+        {
+            return list.Select(x => transform_IntToInt(x, y)).ToList();
         }
 
-        public delegate bool Predicate(int x);
-        public List<int> Filter(Predicate predicate, List<int> list)
+        public static bool leq(int x, int y)
         {
-            return list.Where(x => predicate(x)).ToList();
+            return x < y;
+        }
+        public static bool geq(int x, int y)
+        {
+            return x > y;
+        }
+        public static bool eq(int x, int y)
+        {
+            return x == y;
+        }
+        public static bool modeq(int x, int y)
+        {
+            return x % y == 0;
+        }
+        public static bool modneq(int x, int y)
+        {
+            return x % y != 0;
+        }
+        public delegate bool Predicate(int x, int y);
+        public static List<int> filter(List<int> list, Predicate predicate, int y)
+        {
+            return list.Where(x => predicate(x, y)).ToList();
         }
 
-        public int Count(Predicate predicate, List<int> list)
+        public static int count(List<int> list, Predicate predicate, int y)
         {
-            return list.Count(x => predicate(x));
+            return list.Count(x => predicate(x, y));
         }
 
         public delegate int Map_IntPairs_To_Int(int x, int y);
-        public List<int> ZipWith(Map_IntPairs_To_Int map_IntPairs_To_Int, List<int> a, List<int> b)
+        public static List<int> zipWith(List<int> a, List<int> b, Func<int, int, int> map_IntPairs_To_Int)
         {
             return a.Zip(b, (first, second) =>
             {
@@ -104,7 +151,7 @@ namespace Synthesizer
             }).ToList();
         }
 
-        public List<int> ScanL1(Map_IntPairs_To_Int map_IntPairs_To_Int, List<int> list)
+        public static List<int> scanL1(List<int> list, Map_IntPairs_To_Int map_IntPairs_To_Int)
         {
             var newList = new List<int>();
             newList.Add(list.First());

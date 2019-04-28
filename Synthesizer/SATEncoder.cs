@@ -24,7 +24,7 @@ namespace Synthesis
     public class SATEncoder<T>
     {
         //Intermediate Variable Symbol
-        public const string ivs = "v";
+        //public const string ivs = "v";
 
         //Input Symbol
         public const string x = "x";
@@ -46,35 +46,35 @@ namespace Synthesis
             return before;
         }
 
-        public static int calculateIndex(TreeNode<T> node, int index)
+        public static int calculateIndex(TreeNode<T> node, int index, Grammar grammar)
         {
             int retIndex = 0;
             //if (node.Parent != null)
             //{
-                var parentPositionInRow = ((node.index) * 2);
+                var parentPositionInRow = ((node.index) * grammar.maxArity);
                 var currentNodePositionInParentsChildrenList = index;
                 retIndex = currentNodePositionInParentsChildrenList + parentPositionInRow;
             //}
             return retIndex;
         }
 
-        public static string After(TreeNode<T> node, string spec, int index)
+        public static string After(TreeNode<T> node, string spec, int index, Grammar grammar)
         {
             string after;
             if (spec.Contains($"{x}{ops}"))
-                after = ivs + calculateIndex(node, index) + ops;
+                after = Symbols.ivs + calculateIndex(node, index, grammar) + ops;
             else
-                after = ivs + calculateIndex(node, index);
+                after = Symbols.ivs + calculateIndex(node, index, grammar);
 
             return after;
         }
 
-        public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec)
+        public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec, Grammar grammar)
         {
             for (int i = 1; i < node.Children.Count + 1; i++)
             {
                 var before = Before(node, spec, i);
-                var after = After(node, spec, i);
+                var after = After(node, spec, i, grammar);
 
                 spec = spec.Replace(before, after);
             }
@@ -98,16 +98,16 @@ namespace Synthesis
                     {
                         retSpecList.Add(node.Data.ToString() + Symbols.dot + property
                             + RelationalOperators.operators[ERelationalOperators.Eq]
-                            + ivs + node.index + Symbols.dot + property);
+                            + Symbols.ivs + node.index + Symbols.dot + property);
                     }
                     break;
 
                 case (Symbols.intType):
-                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index);
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + Symbols.ivs + node.index);
                     break;
 
                 case (Symbols.otherType):
-                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + ivs + node.index);
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + Symbols.ivs + node.index);
                     break;
 
                 default:
@@ -210,11 +210,11 @@ namespace Synthesis
                     switch (nodeSpecAsList.Item2.argType)
                     {
                         case (ArgType.List):
-                            nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause(x)).ToList();
+                            nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause1(x, node)).ToList();
                             break;
 
                         case (ArgType.Int):
-                            nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause(nodeSpecAsList.Item2.obj.ToString()));
+                            nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause1(nodeSpecAsList.Item2.obj.ToString(), node));
                             break;
                     }
                 }
@@ -236,17 +236,17 @@ namespace Synthesis
                     //spec = GetLeafSpec(programSpec, node);                
                     //spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
 
-                    spec = specAsString.value.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{ivs}{node.index}{Symbols.dot}");
+                    spec = specAsString.value.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{Symbols.ivs}{node.index}{Symbols.dot}");
                     spec = spec.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
                 }
                 else if (node.IsRoot)
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar);
                 }
                 else
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value);
-                    spec = spec.Replace(y, ivs + node.index);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar);
+                    spec = spec.Replace(y, Symbols.ivs + node.index);
                 }
 
                 node.Spec = spec;

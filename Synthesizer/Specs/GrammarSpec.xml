@@ -1,28 +1,34 @@
 <grammar>
-	<startSymbol>
-		N
-	</startSymbol>
-	<nonTerminals>
-		N, L, T, M
-	</nonTerminals>
-	<terminals>
-		head, sort, reverse, take, filter, leqz, gteqz, eqz, x1, x2, maximum, minimum, 0, 10
-	</terminals>
+  <startSymbol>
+    N
+  </startSymbol>
+  <nonTerminals>
+    N, L, T, M, F, Z
+  </nonTerminals>
+  <terminals>
+    last, head, access, minimum, maximum, sum, count, take, drop, sort, reverse, filter, map, zipWith, scanl1, geq, leq, eq, neq, modeq, modneq, mul, div, plus, minus, pow, min, max
+  </terminals>
   <types>
-    int(0), int(10), list([1'2'3])
+    int(-3), int(-2), int(-1), int(0), int(1), int(2), int(3), list([1'2'3])
   </types>
-	<production>
-		<rule>
-      N --> head L, last L, sum L, maximum L, minimum L
-    </rule>	
-		<rule>
-			L --> sort L, x1, filter L T, take L M, reverse L
-		</rule>
+  <production>
     <rule>
-      M --> x2, 0, 10
+      N --> head L, last L, access L M, sum L, count L T M,  maximum L, minimum L
     </rule>
-	    <rule>
-			T --> leqz, gteqz, eqz
-		</rule>
-	</production>
+    <rule>
+      L --> x1, take L M, drop L M, sort L, reverse L, filter L T M, map L F M, zipWith L L Z, scanl1 L Z
+    </rule>
+    <rule>
+      M --> x2, -3, -2, -1, 0, 1, 2, 3
+    </rule>
+    <rule>
+      T --> leq, gteq, eq, modeq, modneq
+    </rule>
+    <rule>
+      F --> mul, div, plus, minus, pow
+    </rule>
+    <rule>
+      Z --> plus, minus, mul, min, max
+    </rule>
+  </production>
 </grammar>

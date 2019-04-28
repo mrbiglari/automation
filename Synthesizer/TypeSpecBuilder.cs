@@ -29,9 +29,8 @@ namespace Synthesis
         public const string key_properties = "Properties";
         public static Context context;
 
-        public static List<TypeSpec> Build(string fileName, Context ctx)
+        public static List<TypeSpec> Build(string fileName)
         {
-            context = ctx;
             var specContent = GetTypeSpecsFile(fileName);
             return BuildTypeSpecFromSpec(specContent);
         }

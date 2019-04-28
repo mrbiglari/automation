@@ -1,4 +1,5 @@
-﻿using Microsoft.Z3;
+﻿using CSharpTree;
+using Microsoft.Z3;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -206,6 +207,20 @@ namespace Synthesis
 
             return boolExpr;
         }
+
+        public static BoolExpr GetSpecForClause1<T>(string spec, TreeNode<T> node)
+        {
+            var opr = spec.ContainsWhich(RelationalOperators.operators);
+            var operands = spec.SplitBy(RelationalOperators.operators[opr]);
+
+            var arg_1 = GetArg((node.IsRoot) ? operands.First() : $"{Symbols.ivs}{node.index.ToString()}");
+            var arg_2 = GetArg(operands.Last());
+
+            var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);
+
+            return boolExpr;
+        }
+
 
         public static List<BoolExpr> GetComponentSpec(Z3ComponentSpecs componentSpec)
         {

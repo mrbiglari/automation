@@ -117,8 +117,8 @@ namespace Synthesis
             currentNode = Decide_AST(currentNode, lemmas, context, grammar);
             return currentNode;
         }
-        
-        private TreeNode<string> FindHole_DFS(TreeNode<string> root)
+
+        public TreeNode<string> DFS(TreeNode<string> root, Func<TreeNode<string>, bool> predicate)
         {
             var stack = new Stack<TreeNode<string>>();
             stack.Push(root);
@@ -126,7 +126,7 @@ namespace Synthesis
             while(stack.Count() != 0)
             {
                 var current = stack.Pop();
-                if(current.IsHole)
+                if(predicate(current))
                 {
                     return current;
                 }
@@ -141,7 +141,7 @@ namespace Synthesis
 
         private TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar)
         {
-            var hole = FindHole_DFS(root);
+            var hole = DFS(root, (x) => x.IsHole);
 
             var condition = root.holes == null;
             var currentLeftHandSide = condition ? grammar.startSymbol : hole.Parent.holes.Pop();

@@ -39,6 +39,7 @@ namespace Synthesis
 
     public static class Symbols
     {
+        public const string ivs = "v";
         public const string argTypeOpeningSymbol = "(";
         public const string argTypeClosingSymbol = ")";
         public const string argSeperator = "--";
