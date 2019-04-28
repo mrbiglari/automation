@@ -10,16 +10,14 @@ using Synthesizer;
 namespace Synthesis
 {
     public class Program
-    {
-        public const string specsFolderPath = "Specs/";
-        public const string path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
-        public const string path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
-        public const string path_programSpec = specsFolderPath + "ProgramSpec.xml";
-        public const string path_typeSpec = specsFolderPath + "TypeSpec.xml";
-        public Random rand = new Random(5);
+    {                
         public UnSatCores unSATCores;
         public Lemmas lemmas;
-
+        public Random random;
+        public Program(Random random)
+        {
+            this.random = random;
+        }
 
         public UnSatCore CheckConflict(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<string> root, Grammar grammar)
         {
@@ -103,10 +101,10 @@ namespace Synthesis
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
-                var typeSpecs = TypeSpecBuilder.Build(path_typeSpec);
-                var programSpec = ProgramSpecBuilder.Build(path_programSpec, context, typeSpecs);
-                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
-                z3ComponentsSpecs = ComponentSpecsBuilder.Build(path_componentSpec, context, programSpec, grammar);
+                var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
+                var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec, context, typeSpecs);
+                var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
 
                 var numberOfPrograms = 0;
 
@@ -138,13 +136,17 @@ namespace Synthesis
                         root.Visualize();
                         Console.WriteLine("#######################################");
 
-                        ExecuteProgram(root, new object[] { new List<int> { 1, 34, 15, 6, 10 }, 2 });
+                        if (lemmas.Count > 3)
+                            ;
+
+                        //var result = CreateRandomParamsAndExecuteProgram(root, new Random());
+                        //ExecuteProgram(root, new object[] { new List<int> { 1, 34, 15, 6, 10 }, 2 });
 
                         root = new TreeNode<string>();
                         currentNode = root;
                         lemmas.Clear();
                         //unSATCores.Clear();
-                        grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
+                        grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
 
                         if (numberOfPrograms + 1 == demand)
                             break;
@@ -165,110 +167,16 @@ namespace Synthesis
             }
         }
 
-        public void TEMP()
-        {
-            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {
-                var typeSpecs = TypeSpecBuilder.Build(path_typeSpec);
-                var grammar = GrammarBuilder.Build(path_grammarSpec, typeSpecs, rand);
-                var root = new TreeNode<string>();
-                while (true)
-                {
-                    grammar.Decide(root, new Lemmas(), context, grammar);
-                    if (root.IsConcrete)
-                    {
-                        root.Visualize();
-                        break;
-                    }
-                    //var type = Type.GetType("ComponentConcreteSpecs");
-                    //var type = Type.GetType(typeof(ComponentConcreteSpecs).Name);                    
-                }
-            }
-        }
-
-        public void ImplementProgram()
-        {
-            var methodName = "last";
-            var type = typeof(ComponentConcreteSpecs);
-            //var method = type.GetMethod(methodName, BindingFlags.Public);
-            var method = type.GetMethod(methodName);
-            var args = method.GetGenericArguments();
-            var result = method.Invoke(null, new object[] { new List<int> { 1, 2, 3 } });
-        }
-        
-
-        public object ExecuteProgram(TreeNode<string> node, object[] programArguments)
-        {
-            var methodName = node.Data;
-            var type = typeof(ComponentConcreteSpecs);
-            var method = type.GetMethod(methodName);
-            var args = new List<object>();
-            //var ss = method.ReturnType;
-            //var sss = method.ReflectedType;
-            //var s1 = Delegate.CreateDelegate(typeof(ComponentConcreteSpecs), method);
-            //var s1 = Delegate.CreateDelegate(Type.GetType(method), method);
-            //var a1= s1.DynamicInvoke(new List<int>() { 1,2,3});
-
-            //var sss = method.CreateDelegate(this);
-
-            //var a1 = sss.DynamicInvoke(new List<int>() { 1, 2, 3 });
-
-            foreach (var child in node.Children)
-            {
-                args.Add(ExecuteProgram(child, programArguments));
-            }
-
-            if(node.Children.Count == 0)
-            {
-                if (node.Data.Contains("x"))
-                {
-                    return programArguments[Int32.Parse(node.Data.SplitBy("x").Last()) - 1];
-                }
-                else if (method != null)
-                    return method.CreateDelegate(this);
-                else
-                    return Int32.Parse(node.Data);
-            }
-            else           
-                return method.Invoke(null, args.ToArray());
-
-
-        }
 
         static void Main(string[] args)
         {
-            var program = new Program();
+            var rand = new Random(5);
+            var program = new Program(rand);
             program.Synthesize_WhileTrue();
-            //program.ImplementProgram();
-            //program.TEMP();
+            //BenchmarkFactory.CreateBenchmark(rand);
 
         }
     }
 
-    public static class DelegateExtension
-    {
-        public static Delegate CreateDelegate(this MethodInfo methodInfo, object target)
-        {
-            Func<Type[], Type> getType;
-            var isAction = methodInfo.ReturnType.Equals((typeof(void)));
-            var types = methodInfo.GetParameters().Select(p => p.ParameterType);
-
-            if (isAction)
-            {
-                getType = Expression.GetActionType;
-            }
-            else
-            {
-                getType = Expression.GetFuncType;
-                types = types.Concat(new[] { methodInfo.ReturnType });
-            }
-
-            if (methodInfo.IsStatic)
-            {
-                return Delegate.CreateDelegate(getType(types.ToArray()), methodInfo);
-            }
-
-            return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
-        }
-    }
+   
 }

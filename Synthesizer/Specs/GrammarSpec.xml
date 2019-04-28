@@ -19,7 +19,7 @@
       L --> x1, take L M, drop L M, sort L, reverse L, filter L T M, map L F M, zipWith L L Z, scanl1 L Z
     </rule>
     <rule>
-      M --> x2, -3, -2, -1, 0, 1, 2, 3
+      M --> x2, 1, 2, 3
     </rule>
     <rule>
       T --> leq, gteq, eq, modeq, modneq

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Z3;
+using Synthesizer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,15 +12,6 @@ namespace Synthesis
 {
     public class ProgramSpecBuilder
     {
-        public const string key_args = "Arg";
-        public const string key_programDefinition = "ProgramDefinition";
-        public const string key_type = "Type";
-        public const string key_properties = "Properties";
-        public const string key_inputArgs = "InputArgs";
-        public const string key_outputArgs = "OutputArgs";
-        public const string key_programSpec = "Example";
-        public const string key_input = "Input";
-        public const string key_output = "Output";
         public static Context context;
 
         private const string first = Symbols.first;
@@ -111,7 +103,7 @@ namespace Synthesis
 
         private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML, List<TypeSpec> typeSpecs)
         {
-            var programDefinition = componentSpecsXML.Descendants(key_programDefinition).First().Value.Trim();
+            var programDefinition = componentSpecsXML.Descendants(Resources.key_programDefinition).First().Value.Trim();
             
             var inputParametersSplittedList = programDefinition.SplitBy(Symbols.argSeperator).First().SplitBy(Symbols.seperator)
                 .Select(
@@ -130,22 +122,22 @@ namespace Synthesis
             //UpdateParametersList(outputSplittedList, ParameterType.Output);
 
 
-            var argTypesList = componentSpecsXML.Descendants(key_inputArgs).Descendants(key_args).Descendants(key_type).Select(x => new Arg(x.Value.Trim())).ToList();
+            var argTypesList = componentSpecsXML.Descendants(Resources.key_inputArgs).Descendants(Resources.key_args).Descendants(Resources.key_type).Select(x => new Arg(x.Value.Trim())).ToList();
 
-            var argSpecList = componentSpecsXML.Descendants(key_inputArgs).Descendants(key_args)
+            var argSpecList = componentSpecsXML.Descendants(Resources.key_inputArgs).Descendants(Resources.key_args)
                 .Select(x =>
                     Tuple.Create
                     (
-                        x.Descendants(key_type).First().Value.Trim(),
-                        (x.Descendants(key_properties).FirstOrDefault()?.Value.Trim() ?? String.Empty).SplitBy(Symbols.seperator))
+                        x.Descendants(Resources.key_type).First().Value.Trim(),
+                        (x.Descendants(Resources.key_properties).FirstOrDefault()?.Value.Trim() ?? String.Empty).SplitBy(Symbols.seperator))
                     ).ToList();
 
 
-            var programSpecsList = componentSpecsXML.Descendants(key_programSpec)
+            var programSpecsList = componentSpecsXML.Descendants(Resources.key_example)
                 .Select(x => new Dictionary<ParameterType, string>()
                 {
-                    {ParameterType.Input, x.Descendants(key_input).FirstOrDefault().Value.Trim() },
-                    {ParameterType.Output, x.Descendants(key_output).FirstOrDefault().Value.Trim() }
+                    {ParameterType.Input, x.Descendants(Resources.key_input).FirstOrDefault().Value.Trim() },
+                    {ParameterType.Output, x.Descendants(Resources.key_output).FirstOrDefault().Value.Trim() }
                 }).ToList();
 
             var examples = new List<Example>();

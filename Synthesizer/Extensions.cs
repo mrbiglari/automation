@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -132,6 +134,81 @@ namespace Synthesis
 
             }
             return operatorType;
+        }
+    }
+    public static class EnumerableExtensions
+    {
+        //public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
+        //{
+        //    return source.Shuffle(new Random());
+        //}
+
+        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng = null)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            //if (rng == null) throw new ArgumentNullException("rng");
+            if (rng == null)
+                rng = new Random();
+
+            return source.ShuffleIterator(rng);
+        }
+
+        private static IEnumerable<T> ShuffleIterator<T>(
+            this IEnumerable<T> source, Random rng)
+        {
+            List<T> buffer = source.ToList();
+            for (int i = 0; i < buffer.Count; i++)
+            {
+                int j = rng.Next(i, buffer.Count);
+                yield return buffer[j];
+
+                buffer[j] = buffer[i];
+            }
+        }
+    }
+    public static class DelegateExtension
+    {
+        public static Delegate CreateDelegate(this MethodInfo methodInfo, object target)
+        {
+            Func<Type[], Type> getType;
+            var isAction = methodInfo.ReturnType.Equals((typeof(void)));
+            var types = methodInfo.GetParameters().Select(p => p.ParameterType);
+
+            if (isAction)
+            {
+                getType = Expression.GetActionType;
+            }
+            else
+            {
+                getType = Expression.GetFuncType;
+                types = types.Concat(new[] { methodInfo.ReturnType });
+            }
+
+            if (methodInfo.IsStatic)
+            {
+                return Delegate.CreateDelegate(getType(types.ToArray()), methodInfo);
+            }
+
+            return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
+        }
+    }
+    public static class RandomExtension
+    {
+        public static List<int> InstantiateRandomly_List_Of_Int(this Random random, int limit)
+        {
+
+            var list = new List<int>();
+            for (int i = 1; i <= limit; i++)
+            {
+                list.Add(i);
+            }
+            list = list.Shuffle(random).ToList();
+            return list.GetRange(0, random.Next(limit));
+        }
+
+        public static int InstantiateRandomly_Int(this Random random, int limit)
+        {
+            return random.Next(limit);
         }
     }
 }

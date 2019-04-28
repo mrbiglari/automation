@@ -48,8 +48,7 @@ namespace Synthesis
             var typeSpecList = componentSpecsXML.Descendants(key_type)
                 .Select(x =>
                 {
-                    return new TypeSpec(
-                           EnumHelper.ToEnum<ArgType>(x.Descendants(key_typeName).FirstOrDefault().Value.Trim()),
+                    return new TypeSpec(EnumHelper.ToEnum<ArgType>(x.Descendants(key_typeName).FirstOrDefault().Value.Trim()),
                            x.Descendants(key_properties).FirstOrDefault()?.Value.Trim().SplitBy(",") ?? null
                            );
                 }    ).ToList();

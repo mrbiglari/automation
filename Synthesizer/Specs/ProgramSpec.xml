@@ -1,4 +1,4 @@
-<ProgamSpecs>
+<ProgamSpec>
   <ProgramDefinition>
     list(x1), int(x2) -- list(y)
   </ProgramDefinition>
@@ -20,4 +20,4 @@
 		</Output>
 	</Example>
 	
-</ProgamSpecs>
+</ProgamSpec>
