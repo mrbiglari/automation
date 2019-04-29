@@ -21,10 +21,10 @@ namespace Synthesis
         private const string key_rules = "rule";
         private int maxArity;
 
-        public static Grammar Build(string fileName, List<TypeSpec> typeSpec, Random rand)
+        public static Grammar Build(string fileName, List<TypeSpec> typeSpec, Random rand, List<Parameter> parameters)
         {
             var specContent = GetGrammarSpecFile(fileName);
-            return BuildGrammarFromSpec(specContent, typeSpec, rand);
+            return BuildGrammarFromSpec(specContent, typeSpec, rand, parameters);
         }
 
         private static XElement GetGrammarSpecFile(string fileName)
@@ -34,7 +34,7 @@ namespace Synthesis
             return XElement.Load(grammarSpecFilepath);
         }
 
-        private static Grammar BuildGrammarFromSpec(XElement grammarSpec, List<TypeSpec> typeSpecs, Random rand)
+        private static Grammar BuildGrammarFromSpec(XElement grammarSpec, List<TypeSpec> typeSpecs, Random rand, List<Parameter> parameters)
         {
             var countArity = 0;
 
@@ -75,13 +75,22 @@ namespace Synthesis
                 foreach (var rhs in rightHandSideSymbols)
                 {
 
-                    var splittedRHS1 = rhs.SplitBy(_blankSpace).ToList().Where(x => nonTerminals.Contains(x)).ToList();
-                    if (splittedRHS1.Count() > countArity)
-                        countArity = splittedRHS1.Count();
+                    if (rhs.Contains("("))
+                    {
+                        var rules = parameters.Where(x => x.argType == EnumHelper.ToEnum<ArgType>(rhs.SplitBy("(").First()) && x.parameterType == ParameterType.Input)
+                            .Select(x => new Production(leftHandsideSymbol, new List<string>() { x.obj.ToString() }, 0)).ToList();
+                        productions.AddRange(rules);
+                    }
+                    else
+                    {
+                        var splittedRHS1 = rhs.SplitBy(_blankSpace).ToList().Where(x => nonTerminals.Contains(x)).ToList();
+                        if (splittedRHS1.Count() > countArity)
+                            countArity = splittedRHS1.Count();
 
-                    var splittedRHS = rhs.SplitBy(_blankSpace);
+                        var splittedRHS = rhs.SplitBy(_blankSpace);
 
-                    productions.Add(new Production(leftHandsideSymbol, splittedRHS, splittedRHS1.Count()));
+                        productions.Add(new Production(leftHandsideSymbol, splittedRHS, splittedRHS1.Count()));
+                    }
                 }
 
             }

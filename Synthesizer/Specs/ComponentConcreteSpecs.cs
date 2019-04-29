@@ -151,7 +151,7 @@ namespace Synthesizer
             }).ToList();
         }
 
-        public static List<int> scanL1(List<int> list, Map_IntPairs_To_Int map_IntPairs_To_Int)
+        public static List<int> scanL1(List<int> list, Func<int, int, int> map_IntPairs_To_Int)
         {
             var newList = new List<int>();
             newList.Add(list.First());

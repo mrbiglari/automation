@@ -183,8 +183,10 @@ namespace Synthesis
                 }
                 if (!holeToFill.IsHole)
                 {
-                    if (!RuleResultsInLeaf(grammar, holeToFill.rule))                    
+                    if (!RuleResultsInLeaf(grammar, holeToFill.rule))
+                    {
                         productions.Remove(holeToFill.rule);
+                    }
 
                     return hole;
                 }

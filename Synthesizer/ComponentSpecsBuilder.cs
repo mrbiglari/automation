@@ -208,12 +208,28 @@ namespace Synthesis
             return boolExpr;
         }
 
+        public static string GetIntermediateVariableWithPropertyAsString<T>(TreeNode<T> node, List<string> operands, string spec)
+        {
+            if (node.IsRoot)
+            {
+                return operands.First();
+            }
+            else
+            {
+                if (!spec.Contains(Symbols.dot))
+                    return $"{Symbols.ivs}{node.index.ToString()}";
+                else
+                    return $"{Symbols.ivs}{node.index.ToString()}{Symbols.dot}{operands.First().SplitBy(Symbols.dot).Last()}";
+            }
+        }
+
         public static BoolExpr GetSpecForClause1<T>(string spec, TreeNode<T> node)
         {
             var opr = spec.ContainsWhich(RelationalOperators.operators);
             var operands = spec.SplitBy(RelationalOperators.operators[opr]);
 
-            var arg_1 = GetArg((node.IsRoot) ? operands.First() : $"{Symbols.ivs}{node.index.ToString()}");
+            var arg_1 = GetArg(GetIntermediateVariableWithPropertyAsString(node, operands, spec));
+
             var arg_2 = GetArg(operands.Last());
 
             var boolExpr = RelationalOperators.GetSpec(opr, arg_1, arg_2, context);

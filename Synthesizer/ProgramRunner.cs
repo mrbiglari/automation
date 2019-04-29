@@ -21,22 +21,38 @@ namespace Synthesizer
             {
                 args.Add(ExecuteProgram(child, programArguments));
             }
-
-            if (node.Children.Count == 0)
-            {
-                if (node.Data.Contains("x"))
+            //try
+            //{
+                if (node.Children.Count == 0)
                 {
-                    return programArguments[Int32.Parse(node.Data.SplitBy("x").Last()) - 1];
+                    if (node.Data.Contains("x"))
+                    {
+                        return programArguments[Int32.Parse(node.Data.SplitBy("x").Last()) - 1];
+                    }
+                    else if (method != null)
+                        return method.CreateDelegate(this);
+                    else
+                    {
+                        if (node.Data.Contains("["))
+                        {
+                            var s = node.Data.Remove(new string[] { "[", "]" }).SplitBy("'").Select(x => Int32.Parse(x)).ToList();
+                            return node.Data.Remove(new string[] { "[", "]" }).SplitBy("'").Select(x => Int32.Parse(x)).ToList();
+                        }
+
+                        else
+                            return Int32.Parse(node.Data);
+                    }
+
                 }
-                else if (method != null)
-                    return method.CreateDelegate(this);
                 else
-                    return Int32.Parse(node.Data);
-            }
-            else
-                return method.Invoke(null, args.ToArray());
-
-
+                    return method.Invoke(null, args.ToArray());
+            //}
+            //catch(Exception exs)
+            //{
+            //    ;
+                
+            //}
+            //return null;
         }
     }
 }

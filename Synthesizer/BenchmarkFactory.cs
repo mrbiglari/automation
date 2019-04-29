@@ -33,13 +33,24 @@ namespace Synthesizer
             return ret;
         }
 
-        public static void WriteBenchmark(TreeNode<string> root, List<List<object>> programSpec)
+        public static string TypedParam(Parameter parameter)
+        {
+            var paramAsString = parameter.obj.ToString();
+            switch (parameter.argType)
+            {                
+                case (ArgType.List):
+                    return $"list({paramAsString})";
+                case (ArgType.Int):
+                    return $"int({paramAsString})";
+                default:
+                    return String.Empty;
+            }
+        }
+
+        public static void WriteBenchmark(TreeNode<string> root, List<List<object>> programSpec, List<Parameter> parameters)
         {
             Assembly asm = Assembly.GetExecutingAssembly();
             string path = System.IO.Path.GetDirectoryName(asm.Location);
-
-
-            
 
             var folderPath = $"{path}\\MyFolder";
             System.IO.Directory.CreateDirectory(folderPath);
@@ -51,7 +62,11 @@ namespace Synthesizer
             var xElement_programSpec = new XElement(Resources.key_programSpec);
 
             var xElement_programDefinition = new XElement(Resources.key_programDefinition);
-            xElement_programDefinition.Value = $"list(x1), int(x2) -- list(y)";
+
+            xElement_programDefinition.Value = $@"{String.Join(",",parameters
+                .Where(x => x.parameterType == ParameterType.Input)
+                .Select((x) => TypedParam(x)))} -- {parameters.Where(x => x.parameterType == ParameterType.Output).Select(x => TypedParam(x)).First()}";
+
             xElement_programSpec.Add(xElement_programDefinition);
 
             foreach(var example in programSpec)
@@ -82,8 +97,12 @@ namespace Synthesizer
             var context = new Microsoft.Z3.Context(new Dictionary<string, string>() { { "proof", "true" } });
 
             var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
-            var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
-            var root = new TreeNode<string>();
+            var grammar = default(Grammar);
+            var root = default(TreeNode<string>);
+            var input_arg_limit = 5;
+            var parameters = new List<Parameter>();
+            SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
+
             var programSpecs = new List<List<List<object>>>();
             while (true)
             {
@@ -101,14 +120,15 @@ namespace Synthesizer
                         {
                             for (int i = 0; i < 500; i++)
                             {
-                                var result = CreateRandomParamsAndExecuteProgram(root, random);
+                                var result = CreateRandomParamsAndExecuteProgram(root, random, parameters);
                                 programSpec.Add(result);
                                 if (programSpec.Count == 5)
                                 {
                                     programSpecs.Add(programSpec);
-                                    WriteBenchmark(root, programSpec);
-                                    root = new TreeNode<string>();
-                                    grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                                    WriteBenchmark(root, programSpec, parameters);
+
+                                    SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
+
                                     break;
                                 }
 
@@ -116,46 +136,73 @@ namespace Synthesizer
                         }
                         catch (Exception exception)
                         {
-                            ;
-                            root = new TreeNode<string>();
-                            grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                            SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
                         }
 
                     }
                     else
                     {
-                        root = new TreeNode<string>();
-                        grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                        SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
                     }
 
-                    if (programSpecs.Count == 50)
-                        break;
+                   
                 }
+                if (programSpecs.Count == 50)
+                    break;
             }
         }
 
-        public static List<object> CreateRandomParamsAndExecuteProgram(TreeNode<string> root, Random random)
+        public static void SetupNewProgram(ref TreeNode<string> root, ref Grammar grammar, List<TypeSpec> typeSpecs, Random random, int input_arg_limit, ref List<Parameter> parameters)
+        {
+
+            parameters = new List<Parameter>();
+
+            for (int i = 1; i <= input_arg_limit; i++)
+            {
+                var inputParameter = new Parameter()
+                {
+                    index = i,
+                    parameterType = ParameterType.Input,
+                    argType = random.EnumValue<ArgType>(),
+                    obj = $"x{i}"
+                };
+                parameters.Add(inputParameter);
+            }
+
+            var outputParameter = new Parameter()
+            {
+                index = 0,
+                parameterType = ParameterType.Output,
+                argType = ArgType.List,
+                obj = $"y"
+            };
+            parameters.Add(outputParameter);
+
+            root = new TreeNode<string>();
+            grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, parameters);
+        }
+
+        public static List<object> CreateRandomParamsAndExecuteProgram(TreeNode<string> root, Random random, List<Parameter> parameters)
         {
             var runner = new ProgramRunner();
             var programExample = new List<object>();
 
             var value_limit = 100;
-            var arg_1 = random.InstantiateRandomly_List_Of_Int(value_limit);
-            var arg_2 = random.InstantiateRandomly_Int(value_limit);
-            programExample.AddRange(new List<object> { arg_1, arg_2 });
-            var result = runner.ExecuteProgram(root, programExample.ToArray());
+
+            var args = new List<object>();
+            (parameters.Where(x => x.parameterType == ParameterType.Input).Count()).Times((i) =>
+            {
+                var arg = default(object);
+                if(parameters[i].argType == ArgType.List)
+                    arg = random.InstantiateRandomly_List_Of_Int(value_limit);
+                else if (parameters[i].argType == ArgType.Int)
+                    arg = random.InstantiateRandomly_Int(value_limit);
+                args.Add(arg);
+            });
+            programExample.AddRange(args);
+            var result = runner.ExecuteProgram(root, args.ToArray());
             programExample.Add(result);
             return programExample;
-        }
-
-        public static void ImplementProgram()
-        {
-            var methodName = "last";
-            var type = typeof(ComponentConcreteSpecs);
-            //var method = type.GetMethod(methodName, BindingFlags.Public);
-            var method = type.GetMethod(methodName);
-            var args = method.GetGenericArguments();
-            var result = method.Invoke(null, new object[] { new List<int> { 1, 2, 3 } });
         }
     }
 }

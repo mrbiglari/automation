@@ -32,6 +32,7 @@ namespace Synthesis
                 return default(T);
             }
         }
+
         public static string AsString(this Enum e)
         {
             return e.ToString().ToLower();
@@ -49,6 +50,16 @@ namespace Synthesis
         {
             return myString.Replace(term, "");
         }
+
+        public static string Remove(this string myString, string[] terms)
+        {
+            terms.Length.Times((i)=>
+            {
+                myString = myString.Replace(terms[i], "");
+            });
+            return myString;
+        }
+
         public static UnSatCore AsUnSATCore(this List<UnSatCoreClause> list)
         {
             return new UnSatCore(list);
@@ -81,6 +92,15 @@ namespace Synthesis
                 action();
             }
         }
+
+        public static void Times(this int count, Action<int> action, int i = 0)
+        {
+            for (i = 0; i < count; i++)
+            {
+                action(i);
+            }
+        }
+
 
         public static List<T> Clone<T>(this List<T> listToClone) where T : ICloneable
         {
@@ -194,6 +214,20 @@ namespace Synthesis
     }
     public static class RandomExtension
     {
+
+        //public static T EnumValue<T>(this Random random)
+        //{
+        //    var v = Enum.GetValues(typeof(T));
+        //    return (T)v.GetValue(random.Next(v.Length));
+        //}
+
+        public static T EnumValue<T>(this Random random)
+        {
+            var enum_values = Enum.GetValues(typeof(T)).OfType<T>().ToList().Where(x => Convert.ToInt32(x) >= 0).ToList();
+            var temp = enum_values.Count();
+            return (T)enum_values[random.Next(0, enum_values.Count())];
+        }
+
         public static List<int> InstantiateRandomly_List_Of_Int(this Random random, int limit)
         {
 

@@ -103,7 +103,7 @@ namespace Synthesis
             {
                 var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
                 var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec, context, typeSpecs);
-                var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
 
                 var numberOfPrograms = 0;
@@ -146,7 +146,7 @@ namespace Synthesis
                         currentNode = root;
                         lemmas.Clear();
                         //unSATCores.Clear();
-                        grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random);
+                        grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
 
                         if (numberOfPrograms + 1 == demand)
                             break;
@@ -170,7 +170,8 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var rand = new Random(5);
+
+            var rand = new Random(6);
             var program = new Program(rand);
             program.Synthesize_WhileTrue();
             //BenchmarkFactory.CreateBenchmark(rand);

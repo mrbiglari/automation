@@ -23,18 +23,18 @@ namespace Synthesis
 
     public enum ArgType
     {
-        Unknown = 0,
+        Unknown = -2,
+        Other = -1,
         List,
-        Int,
-        Other
+        Int      
     }
 
     public enum ParameterType
     {
-        Unknown = 0,
+        Unknown = -2,
+        Other = -1,
         Input,
-        Output,
-        Other
+        Output
     }
 
     public static class Symbols
@@ -85,6 +85,9 @@ namespace Synthesis
         public object obj;
         public int index;
 
+        public Parameter()
+        {
+        }
         public Parameter(ParameterType parameterType, ArgType argType, object obj, int index)
         {
             this.argType = argType;
@@ -104,8 +107,8 @@ namespace Synthesis
         public List<Parameter> parameters;
 
         public BoolExpr spec;
-        public string specAsString;     
-       
+        public string specAsString;
+
         public Example(List<Parameter> parameters, List<TypeSpec> argSpecList, Context context)
         {
             this.parameters = new List<Parameter>();
@@ -117,7 +120,7 @@ namespace Synthesis
                 var param = ProgramSpecBuilder.GetParamByType(parameter, argSpec);
 
                 this.parameters.Add(param);
-            }            
+            }
         }
     }
 }
