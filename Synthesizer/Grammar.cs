@@ -2,6 +2,7 @@
 using Microsoft.Z3;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -62,7 +63,7 @@ namespace Synthesis
 
         private bool ContainsNonTerminals(string program)
         {
-            for(int i = 0; i < nonTerminals.Count; i++)
+            for (int i = 0; i < nonTerminals.Count; i++)
             {
                 if (program.Contains(nonTerminals[i]))
                     return true;
@@ -84,15 +85,15 @@ namespace Synthesis
 
             var holes = root.Holes();
 
-            foreach(var hole in holes)
+            foreach (var hole in holes)
             {
                 var index = hole.Parent.Children.IndexOf(hole);
                 var nonTerminalToExpand = hole.Parent.rule.rightHandSide[index + 1];
                 var rules = grammar.productions.Where(x => x.leftHandSide == nonTerminalToExpand).ToList();
-               
+
                 var componentsFromRules_SATEncoded = rules.Select(x => context.MkBoolConst($"C_{hole.index}_{x.component}"));
 
-                var or_componentsFromRules_SATEncoded = componentsFromRules_SATEncoded.Count()== 1 ? componentsFromRules_SATEncoded.First() : context.MkOr(componentsFromRules_SATEncoded);
+                var or_componentsFromRules_SATEncoded = componentsFromRules_SATEncoded.Count() == 1 ? componentsFromRules_SATEncoded.First() : context.MkOr(componentsFromRules_SATEncoded);
 
                 foreach (var rule in rules)
                 {
@@ -108,9 +109,9 @@ namespace Synthesis
                         Propogate(root, lemmas, context, grammar);
                         return;
                     }
-                        
-                }                
-            }          
+
+                }
+            }
         }
         public TreeNode<string> Decide(TreeNode<string> currentNode, Lemmas lemmas, Context context, Grammar grammar)
         {
@@ -123,10 +124,10 @@ namespace Synthesis
             var stack = new Stack<TreeNode<string>>();
             stack.Push(root);
 
-            while(stack.Count() != 0)
+            while (stack.Count() != 0)
             {
                 var current = stack.Pop();
-                if(predicate(current))
+                if (predicate(current))
                 {
                     return current;
                 }
@@ -139,14 +140,14 @@ namespace Synthesis
             throw new ArgumentException("no holes found");
         }
 
-        private TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar)
         {
             var hole = DFS(root, (x) => x.IsHole);
 
             var condition = root.holes == null;
             var currentLeftHandSide = condition ? grammar.startSymbol : hole.Parent.holes.Pop();
 
-            if(!condition)
+            if (!condition)
                 hole.Parent.holesBackTrack.Push(currentLeftHandSide);
 
             var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
@@ -194,9 +195,91 @@ namespace Synthesis
             return null;
         }
 
+        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas)
+        {
+            var hole = DFS(root, (x) => x.IsHole);
+
+            var condition = root.holes == null;
+            var currentLeftHandSide = condition ? grammar.startSymbol : hole.Parent.holes.Pop();
+
+            if (!condition)
+                hole.Parent.holesBackTrack.Push(currentLeftHandSide);
+
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+
+            while (possibleProductionRules.Count > 0)
+            {
+                var index = rand.Next(0, (possibleProductionRules.Count()));
+                //var index = 0;
+                //var index = 1;
+                var choosenProductionRule = possibleProductionRules.ElementAt(index);
+
+                var terminal = choosenProductionRule.rightHandSide.First();
+
+                var holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
+
+                holeToFill.FillHole(terminal, choosenProductionRule, context, grammar);
+
+                if (RuleResultsInLeaf(grammar, choosenProductionRule))
+                {
+                    //var stopWatch = new Stopwatch();
+                    //stopWatch.Start();
+                    //Exclude using Lemmas
+                    var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
+                    foreach (var lemma in lemmas)
+                    {
+                        //checking consistency with the knoweldge base (Lemmas)
+                        var lemmaAsExpersion = lemma.AsExpression(context);
+                        var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                        if (checkIfUnSAT)
+                        {
+                            holeToFill.MakeHole();
+                            possibleProductionRules.Remove(choosenProductionRule);
+                            break;
+                        }
+                    }
+                    //var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                    //stopWatch.Reset();
+                    //stopWatch.Start();
+                    //Exclude using unSATPrograms
+                    foreach (var unSATCoreProgram in unSATCorePrograms)
+                    {
+                        //checking consistency with the knoweldge base (UnSAT Programs)
+                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+
+                        var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                        var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+
+                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
+                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                        if (checkIfUnSAT)
+                        {
+                            holeToFill.MakeHole();
+                            possibleProductionRules.Remove(choosenProductionRule);
+                            break;
+                        }
+                    }
+                    //var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;                   
+                    //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
+                }
+                if (!holeToFill.IsHole)
+                {
+                    if (!RuleResultsInLeaf(grammar, holeToFill.rule))
+                    {
+                        productions.Remove(holeToFill.rule);
+                    }
+
+                    return hole;
+                }
+            }
+            return null;
+        }
+
         public bool RuleResultsInLeaf(Grammar grammar, Production rule)
         {
-            var check =(grammar.nonTerminals.Where(x => rule.rightHandSide.Contains(x))?.Count() == 0);
+            var check = (grammar.nonTerminals.Where(x => rule.rightHandSide.Contains(x))?.Count() == 0);
             return check;
         }
 

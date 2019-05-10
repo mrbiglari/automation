@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,6 +19,29 @@ namespace Synthesis
         public Program(Random random)
         {
             this.random = random;
+        }
+
+
+        public TreeNode<string> ExtractUnSATProgram(UnSatCore unSATCore, Grammar grammarGround, Context context)
+        {
+            var minIndex = unSATCore.Min(x => x.index.ToInt());
+            var rootCores = unSATCore.Where(x => x.index.ToInt() == minIndex).ToList();
+
+            var result = unSATCore.GroupBy(x => x.index).Select(grp => grp.First()).OrderBy(x => x.index.ToInt()).ToList();
+
+            var rule = grammarGround.productions.Where(x => x.component == rootCores.First().name).First();
+
+            var rootOfUnSATCoreProgram = new TreeNode<string>();
+            rootOfUnSATCoreProgram.FillHole(rule.component, rule, context, grammarGround, minIndex);
+
+            foreach (var node in result.Skip(1))
+            {
+                rule = grammarGround.productions.Where(x => x.component == node.name).First();
+                var temp = grammarGround.DFS(rootOfUnSATCoreProgram, x => x.index == node.index.ToInt());
+                temp.FillHole(rule.component, rule, context, grammarGround);
+            }
+
+            return rootOfUnSATCoreProgram;
         }
 
         public UnSatCore CheckConflict(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<string> root, Grammar grammar)
@@ -112,58 +136,36 @@ namespace Synthesis
 
                 var root = new TreeNode<string>();
                 lemmas = new Lemmas();
+                unSATCorePrograms = new List<TreeNode<string>>();
                 var currentNode = root;
                 while (true)
                 {
-                    currentNode = grammar.Decide(root, lemmas, context, grammar);
-                    root.Visualize();
+                    //currentNode = grammar.Decide(root, lemmas, context, grammar);
+                    currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas);
+                    //root.Visualize();
                     grammar.Propogate(root, lemmas, context, grammar);
 
                     var unSATCore = CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
 
                     if (unSATCore?.Count != 0)
                     {
+                        var stopWatch = new Stopwatch();
+                        stopWatch.Start();
 
-                        var minIndex = unSATCore.Min(x => x.index.ToInt());
-                        var rootCores = unSATCore.Where(x => x.index.ToInt() == minIndex).ToList();
-
-                        var result = unSATCore.GroupBy(x => x.index).Select(grp => grp.First()).OrderBy(x => x.index.ToInt()).ToList();
-
-
-                        if (minIndex != 0)
-                        {
-                            var rule = grammarGround.productions.Where(x => x.component == rootCores.First().name).First();
-
-                            var rootCore = new TreeNode<string>();
-                            rootCore.FillHole(rule.component, rule, context, grammar, minIndex);
-
-                            foreach(var node in result.Skip(1))
-                            {
-                                rule = grammarGround.productions.Where(x => x.component == node.name).First();
-                                var temp = grammar.DFS( rootCore, x => x.index == node.index.ToInt());
-                                temp.FillHole(rule.component, rule, context, grammar);
-                            }
-
-
-                            var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                            var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, rootCore, grammar, "r");
-
-                            var s1 = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                            var s2 = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-
-                            var check = context.MkNot(context.MkImplies(context.MkAnd(s1.ToList().Skip(20).ToArray()), context.MkAnd(s2)));
-                            if (SMTSolver.CheckIfUnSAT(context, check))
-                            {
-                                ;
-                            }
-
-                            //rootCore.Visualize();                           
-
-                        }
-                        
-
+                        //creating lemma from UnSATCore
                         var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
                         lemmas.Add(lemma);
+
+                        var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                        stopWatch.Reset();
+                        stopWatch.Start();
+
+                        //creating unSAT Programs from UnSATCore
+                        var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
+                        unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+
+                        var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
                         root = BackTrack(unSATCore, grammar, currentNode, root);
                     }
@@ -186,6 +188,7 @@ namespace Synthesis
                         root = new TreeNode<string>();
                         currentNode = root;
                         lemmas.Clear();
+                        unSATCorePrograms.Clear();
                         //unSATCores.Clear();
                         grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
 
@@ -205,15 +208,18 @@ namespace Synthesis
                 Console.Write("Please specify the amount of concrete programs:");
                 var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
                 Synthesize(numberOfPrograms);
+                Console.WriteLine($"Time Elapsed: {stopwatch.Elapsed.Seconds}");
             }
         }
 
-
+        public Stopwatch stopwatch;
         static void Main(string[] args)
         {
-
+            
             var rand = new Random(6);
             var program = new Program(rand);
+            program.stopwatch = new Stopwatch();
+            program.stopwatch.Start();
             program.Synthesize_WhileTrue();
             //BenchmarkFactory.CreateBenchmark(rand);
 

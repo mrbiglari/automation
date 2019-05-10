@@ -145,9 +145,9 @@ namespace CSharpTree
             var holesAsList = rule.rightHandSide.GetRange(1, rule.rightHandSide.Count() - 1);
             holesAsList.Reverse();
             this.holes = new Stack<string>(holesAsList);
-            this.holesBackTrack = new Stack<string>();
-            this.expression = context.MkBoolConst($"C_{index}_{Data.ToString()}");
+            this.holesBackTrack = new Stack<string>();            
             this.index = (index == 0) ? calculateIndex(this, grammar.maxArity) : index;
+            this.expression = context.MkBoolConst($"C_{this.index}_{Data.ToString()}");
             times.Times(() =>
             {
                 this.AddChild();
