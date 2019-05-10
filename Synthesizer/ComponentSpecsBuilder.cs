@@ -179,7 +179,7 @@ namespace Synthesis
             return XElement.Load(componentSpecsFilepath);
         }
 
-        private static ArithExpr GetArg(string term)
+        public static ArithExpr GetArg(string term)
         {
             int numeral;
             var isNumeric = int.TryParse(term, out numeral);
@@ -208,7 +208,7 @@ namespace Synthesis
             return boolExpr;
         }
 
-        public static string GetIntermediateVariableWithPropertyAsString<T>(TreeNode<T> node, List<string> operands, string spec)
+        public static string GetIntermediateVariableWithPropertyAsString<T>(TreeNode<T> node, List<string> operands, string spec, string interVar)
         {
             if (node.IsRoot)
             {
@@ -217,18 +217,18 @@ namespace Synthesis
             else
             {
                 if (!spec.Contains(Symbols.dot))
-                    return $"{Symbols.ivs}{node.index.ToString()}";
+                    return $"{interVar}{node.index.ToString()}";
                 else
-                    return $"{Symbols.ivs}{node.index.ToString()}{Symbols.dot}{operands.First().SplitBy(Symbols.dot).Last()}";
+                    return $"{interVar}{node.index.ToString()}{Symbols.dot}{operands.First().SplitBy(Symbols.dot).Last()}";
             }
         }
 
-        public static BoolExpr GetSpecForClause1<T>(string spec, TreeNode<T> node)
+        public static BoolExpr GetSpecForClause1<T>(string spec, TreeNode<T> node, string interVar)
         {
             var opr = spec.ContainsWhich(RelationalOperators.operators);
             var operands = spec.SplitBy(RelationalOperators.operators[opr]);
 
-            var arg_1 = GetArg(GetIntermediateVariableWithPropertyAsString(node, operands, spec));
+            var arg_1 = GetArg(GetIntermediateVariableWithPropertyAsString(node, operands, spec, interVar));
 
             var arg_2 = GetArg(operands.Last());
 

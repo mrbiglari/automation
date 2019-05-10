@@ -100,7 +100,7 @@
 			map
 		</Name>
 		<Spec>
-			y.size = x.size
+			y.size = x1.size
 		</Spec>
 	</ComponentSpec>
   <ComponentSpec>
@@ -108,7 +108,7 @@
       zipWith
     </Name>
     <Spec>
-      y.last = x1.last ∧ y.last = x2.last
+      y.size = x1.size ∧ y.size = x2.size
     </Spec>
   </ComponentSpec>
   <ComponentSpec>
@@ -116,7 +116,7 @@
 			scanl1
 		</Name>
 		<Spec>
-			y.size = x.size ∧ y.first = x.first
+			y.size = x1.size ∧ y.first = x1.first
 		</Spec>
 	</ComponentSpec>
   <ComponentSpec>

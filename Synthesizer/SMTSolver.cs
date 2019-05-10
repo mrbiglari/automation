@@ -1,4 +1,5 @@
-﻿using Microsoft.Z3;
+﻿using CSharpTree;
+using Microsoft.Z3;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -123,13 +124,14 @@ namespace Synthesis
         public string index;
         public BoolExpr spec;
         public BoolExpr expression;
-
-        public UnSatCoreClause(string name, string index, BoolExpr spec, BoolExpr expression)
+        public BoolExpr exprInterVars;
+        public UnSatCoreClause(string name, string index, BoolExpr spec, BoolExpr expression, BoolExpr exprInterVars)
         {
             this.name = name;
             this.index = index;
             this.spec = spec;
             this.expression = expression;
+            this.exprInterVars = exprInterVars;
         }
     }
     public class Pair<T, U>
@@ -255,7 +257,7 @@ namespace Synthesis
                         var temp = model.satEncodedProgram.Where(y => y.componentName == name).Where(y => y.clauses.First.Contains(expression)).First();
                         var expressionOriginal = temp.clauses.Second?.ElementAt(temp.clauses.First.IndexOf(expression)) ?? default(BoolExpr);
 
-                        return new UnSatCoreClause(name, index, expressionOriginal, (BoolExpr)x.Args[0]);
+                        return new UnSatCoreClause(name, index, expressionOriginal, (BoolExpr)x.Args[0], (BoolExpr)x.Args[1]);
                     }
                     ).OrderBy(x => Int32.Parse(x.index)).ToList().AsUnSATCore();
 

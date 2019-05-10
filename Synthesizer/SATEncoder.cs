@@ -58,23 +58,23 @@ namespace Synthesis
             return retIndex;
         }
 
-        public static string After(TreeNode<T> node, string spec, int index, Grammar grammar)
+        public static string After(TreeNode<T> node, string spec, int index, Grammar grammar, string interVar)
         {
             string after;
             if (spec.Contains($"{x}{ops}"))
-                after = Symbols.ivs + calculateIndex(node, index, grammar) + ops;
+                after = interVar + calculateIndex(node, index, grammar) + ops;
             else
-                after = Symbols.ivs + calculateIndex(node, index, grammar);
+                after = interVar + calculateIndex(node, index, grammar);
 
             return after;
         }
 
-        public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec, Grammar grammar)
+        public static string ReplaceInputSymbolsWithIntermediateVariables(TreeNode<T> node, string spec, Grammar grammar, string interVar)
         {
             for (int i = 1; i < node.Children.Count + 1; i++)
             {
                 var before = Before(node, spec, i);
-                var after = After(node, spec, i, grammar);
+                var after = After(node, spec, i, grammar, interVar);
 
                 spec = spec.Replace(before, after);
             }
@@ -82,7 +82,7 @@ namespace Synthesis
             return spec;
         }
 
-        public static string GetLeafSpec(ProgramSpec programSpec, TreeNode<T> node)
+        public static string GetLeafSpec(ProgramSpec programSpec, TreeNode<T> node, string interVar)
         {
             var argIndex = Int32.Parse(node.Data.ToString().Replace(Symbols.inputArg, "") != node.Data.ToString() ?
                 node.Data.ToString().Replace(Symbols.inputArg, "") :
@@ -98,16 +98,16 @@ namespace Synthesis
                     {
                         retSpecList.Add(node.Data.ToString() + Symbols.dot + property
                             + RelationalOperators.operators[ERelationalOperators.Eq]
-                            + Symbols.ivs + node.index + Symbols.dot + property);
+                            + interVar + node.index + Symbols.dot + property);
                     }
                     break;
 
                 case (Symbols.intType):
-                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + Symbols.ivs + node.index);
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + interVar + node.index);
                     break;
 
                 case (Symbols.otherType):
-                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + Symbols.ivs + node.index);
+                    retSpecList.Add(node.Data.ToString() + RelationalOperators.operators[ERelationalOperators.Eq] + interVar + node.index);
                     break;
 
                 default:
@@ -192,7 +192,7 @@ namespace Synthesis
             return satEncoding;
         }
 
-        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Z3ComponentSpecs> componentSpecs, Context context, Grammar grammar, List<ProgramNode> specList = null)
+        public static List<ProgramNode> SATEncodeTemp(TreeNode<T> node, ProgramSpec programSpec, List<Z3ComponentSpecs> componentSpecs, Context context, Grammar grammar, string interVar, List<ProgramNode> specList = null)
         {
             if (specList == null)
                 specList = new List<ProgramNode>();
@@ -210,11 +210,11 @@ namespace Synthesis
                     switch (nodeSpecAsList.Item2.argType)
                     {
                         case (ArgType.List):
-                            nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause1(x, node)).ToList();
+                            nodeSpec = ((List<string>)nodeSpecAsList.Item2.obj).Select(x => ComponentSpecsBuilder.GetSpecForClause1(x, node, interVar)).ToList();
                             break;
 
                         case (ArgType.Int):
-                            nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause1(nodeSpecAsList.Item2.obj.ToString(), node));
+                            nodeSpec.Add(ComponentSpecsBuilder.GetSpecForClause1(nodeSpecAsList.Item2.obj.ToString(), node, interVar));
                             break;
                     }
                 }
@@ -236,17 +236,17 @@ namespace Synthesis
                     //spec = GetLeafSpec(programSpec, node);                
                     //spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.Item2);
 
-                    spec = specAsString.value.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{Symbols.ivs}{node.index}{Symbols.dot}");
+                    spec = specAsString.value.Replace($"{Symbols.outputArg}{Symbols.dot}", $"{interVar}{node.index}{Symbols.dot}");
                     spec = spec.Replace($"{Symbols.inputArg}{Symbols.dot}", $"{node.Data.ToString()}{Symbols.dot}");
                 }
                 else if (node.IsRoot)
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar, interVar);
                 }
                 else
                 {
-                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar);
-                    spec = spec.Replace(y, Symbols.ivs + node.index);
+                    spec = ReplaceInputSymbolsWithIntermediateVariables(node, specAsString.value, grammar, interVar);
+                    spec = spec.Replace(y, interVar + node.index);
                 }
 
                 node.Spec = spec;
@@ -273,23 +273,23 @@ namespace Synthesis
 
             foreach (var child in node.Children.Where(x => !x.IsHole))
             {
-                SATEncodeTemp(child, programSpec, componentSpecs, context, grammar, specList);
+                SATEncodeTemp(child, programSpec, componentSpecs, context, grammar, interVar, specList);
             }
 
             return specList;
         }        
 
-        public static SMTModel SMTEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
+        public static SMTModel SMTEncode(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar, string interVar)
         {
             return new SMTModel()
             {
-                satEncodedProgram = SATEncodeProgram(componentSpecs, context, programSpec, programRoot, grammar),
+                satEncodedProgram = SATEncodeProgram(componentSpecs, context, programSpec, programRoot, grammar, interVar),
                 satEncodedProgramSpec = SATEncodeProgramSpec(context, programSpec)
             };
         }
-        public static List<ProgramNode> SATEncodeProgram(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar)
+        public static List<ProgramNode> SATEncodeProgram(List<Z3ComponentSpecs> componentSpecs, Context context, ProgramSpec programSpec, TreeNode<T> programRoot, Grammar grammar, string interVar)
         {
-            var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context, grammar);
+            var satEncodingList = SATEncodeTemp(programRoot, programSpec, componentSpecs, context, grammar, interVar);
             return satEncodingList;
         }
 

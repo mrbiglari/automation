@@ -19,6 +19,7 @@ namespace CSharpTree
         public Stack<string> holes;
         public Stack<string> holesBackTrack;
         public BoolExpr expression;
+        private int rootLevel;
 
         public List<TreeNode<T>> Holes(List<TreeNode<T>> holes = null)
         {
@@ -67,7 +68,7 @@ namespace CSharpTree
             get
             {
                 if (this.IsRoot)
-                    return 1;
+                    return rootLevel;
                 return Parent.Level + 1;
             }
         }
@@ -79,10 +80,10 @@ namespace CSharpTree
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
         }
-        public TreeNode()
+        public TreeNode(int rootLevel = 1)
         {
             this.Children = new List<TreeNode<T>>();
-
+            this.rootLevel = rootLevel;
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
         }
@@ -135,7 +136,7 @@ namespace CSharpTree
             }
         }
 
-        public void FillHole(T componentName, Production rule, Context context, Grammar grammar)
+        public void FillHole(T componentName, Production rule, Context context, Grammar grammar, int index = 0)
         {
             var times = rule.rightHandSide.Count() - 1;
             this.Data = componentName;
@@ -146,7 +147,7 @@ namespace CSharpTree
             this.holes = new Stack<string>(holesAsList);
             this.holesBackTrack = new Stack<string>();
             this.expression = context.MkBoolConst($"C_{index}_{Data.ToString()}");
-            this.index = calculateIndex(this, grammar.maxArity);
+            this.index = (index == 0) ? calculateIndex(this, grammar.maxArity) : index;
             times.Times(() =>
             {
                 this.AddChild();
@@ -163,7 +164,7 @@ namespace CSharpTree
         }
         public TreeNode<T> AddChild()
         {
-            TreeNode<T> childNode = new TreeNode<T>() { Parent = this };
+            TreeNode<T> childNode = new TreeNode<T>() { Parent = this, rootLevel = rootLevel };
             Children.Add(childNode);
 
             return childNode;
