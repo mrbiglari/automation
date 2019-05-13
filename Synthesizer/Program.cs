@@ -16,6 +16,8 @@ namespace Synthesis
         public List<TreeNode<string>> unSATCorePrograms;
         public Lemmas lemmas;
         public Random random;
+        public int lemmaCounter;
+        public int extensionCounter;
         public Program(Random random)
         {
             this.random = random;
@@ -141,7 +143,7 @@ namespace Synthesis
                 while (true)
                 {
                     //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                    currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas);
+                    currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter);
                     //root.Visualize();
                     grammar.Propogate(root, lemmas, context, grammar);
 
@@ -149,23 +151,23 @@ namespace Synthesis
 
                     if (unSATCore?.Count != 0)
                     {
-                        var stopWatch = new Stopwatch();
-                        stopWatch.Start();
+                        //var stopWatch = new Stopwatch();
+                        //stopWatch.Start();
 
                         //creating lemma from UnSATCore
                         var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
                         lemmas.Add(lemma);
 
-                        var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                        stopWatch.Reset();
-                        stopWatch.Start();
+                        //var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                        //stopWatch.Reset();
+                        //stopWatch.Start();
 
                         //creating unSAT Programs from UnSATCore
                         var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
                         unSATCorePrograms.Add(rootOfUnSATCoreProgram);
 
-                        var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
-                        Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
+                        //var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
                         root = BackTrack(unSATCore, grammar, currentNode, root);
                     }

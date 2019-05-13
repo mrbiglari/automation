@@ -195,7 +195,7 @@ namespace Synthesis
             return null;
         }
 
-        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter)
         {
             var hole = DFS(root, (x) => x.IsHole);
 
@@ -236,6 +236,8 @@ namespace Synthesis
                         {
                             holeToFill.MakeHole();
                             possibleProductionRules.Remove(choosenProductionRule);
+                            lemmaCounter++;
+                            extensionCounter++;
                             break;
                         }
                     }
@@ -258,9 +260,12 @@ namespace Synthesis
                         {
                             holeToFill.MakeHole();
                             possibleProductionRules.Remove(choosenProductionRule);
+                            extensionCounter++;
                             break;
                         }
                     }
+                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;
+                    Console.WriteLine($"Extension/Lemma ratio:{ratio}");
                     //var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;                   
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
                 }
