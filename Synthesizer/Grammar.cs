@@ -195,7 +195,7 @@ namespace Synthesis
             return null;
         }
 
-        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes)
         {
             var hole = DFS(root, (x) => x.IsHole);
 
@@ -222,8 +222,8 @@ namespace Synthesis
 
                 if (RuleResultsInLeaf(grammar, choosenProductionRule))
                 {
-                    //var stopWatch = new Stopwatch();
-                    //stopWatch.Start();
+                    var stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     //Exclude using Lemmas
                     var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
                     foreach (var lemma in lemmas)
@@ -241,9 +241,9 @@ namespace Synthesis
                             break;
                         }
                     }
-                    //var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                    //stopWatch.Reset();
-                    //stopWatch.Start();
+                    var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                    stopWatch.Reset();
+                    stopWatch.Start();
                     //Exclude using unSATPrograms
                     foreach (var unSATCoreProgram in unSATCorePrograms)
                     {
@@ -264,9 +264,10 @@ namespace Synthesis
                             break;
                         }
                     }
-                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;
+                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;                    
                     Console.WriteLine($"Extension/Lemma ratio:{ratio}");
-                    //var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;                   
+                    var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                    pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
                 }
                 if (!holeToFill.IsHole)

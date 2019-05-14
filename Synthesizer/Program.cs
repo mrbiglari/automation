@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,6 +19,8 @@ namespace Synthesis
         public Random random;
         public int lemmaCounter;
         public int extensionCounter;
+        public List<long> pruningTimes;
+        public List<long> lemmaCreationTimes;
         public Program(Random random)
         {
             this.random = random;
@@ -135,7 +138,8 @@ namespace Synthesis
                 z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
 
                 var numberOfPrograms = 0;
-
+                lemmaCreationTimes = new List<long>();
+                pruningTimes = new List<long>();
                 var root = new TreeNode<string>();
                 lemmas = new Lemmas();
                 unSATCorePrograms = new List<TreeNode<string>>();
@@ -143,7 +147,7 @@ namespace Synthesis
                 while (true)
                 {
                     //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                    currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter);
+                    currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes);
                     //root.Visualize();
                     grammar.Propogate(root, lemmas, context, grammar);
 
@@ -151,22 +155,23 @@ namespace Synthesis
 
                     if (unSATCore?.Count != 0)
                     {
-                        //var stopWatch = new Stopwatch();
-                        //stopWatch.Start();
+                        var stopWatch = new Stopwatch();
+                        stopWatch.Start();
 
                         //creating lemma from UnSATCore
                         var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
                         lemmas.Add(lemma);
 
-                        //var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                        //stopWatch.Reset();
-                        //stopWatch.Start();
+                        var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                        stopWatch.Reset();
+                        stopWatch.Start();
 
                         //creating unSAT Programs from UnSATCore
                         var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
                         unSATCorePrograms.Add(rootOfUnSATCoreProgram);
 
-                        //var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                         //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
                         root = BackTrack(unSATCore, grammar, currentNode, root);
@@ -180,6 +185,16 @@ namespace Synthesis
                         Console.WriteLine("\nConcrete progam found:");
                         root.Visualize();
                         Console.WriteLine("#######################################");
+
+                        var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 0 : extensionCounter / lemmaCounter;
+                        var lemmaCreationAvg = (lemmaCreationTimes.Count() != 0) ? lemmaCreationTimes.Average() : 0;
+                        var pruningTimesAvg = (pruningTimes.Count() != 0) ? pruningTimes.Average() : 0;
+                        string createText = $"{lemmas.Count() + extensionCounter} {unSATCorePrograms.Count()} {ratio} {lemmaCreationAvg} {pruningTimesAvg}" + Environment.NewLine;
+                        File.AppendAllText("C:\\NewFolder\\results.txt", createText);
+                        lemmaCounter = 0;
+                        extensionCounter = 0;
+                        lemmaCreationTimes.Clear();
+                        pruningTimes.Clear();
 
                         if (lemmas.Count > 3)
                             ;
