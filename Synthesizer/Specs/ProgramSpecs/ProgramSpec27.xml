@@ -1,24 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ProgamSpec>
-  <ProgramDefinition>list(x1), int(x2) -- list(y)</ProgramDefinition>
+  <ProgramDefinition>int(x1),int(x2),int(x3),int(x4),int(x5) -- list(y)</ProgramDefinition>
   <Example>
-    <Input>list(52'57'100'84'8'19'12'27'44'42'67'96'48'30'10'13'69'85'20'77'97'36'74'32'49'61'33'63'51'82'64'25'72'80'45'70'95'68'26'98'93'46'65'87'38'40'4'58'23'73'89'43'18'79'99'66'28'1'47'2'54'83'50'31'3'5'29'39'9'92'15'37'7'35'88'11'34'53'91'62'90'6'60'16'59'76'94'41'75'24'22)--int(57)</Input>
-    <Output>list(57)</Output>
+    <Input>int(69)--int(32)--int(21)--int(9)--int(17)</Input>
+    <Output>list(73)</Output>
   </Example>
   <Example>
-    <Input>list(57'76'31'90'47'100'67'32'56'58)--int(60)</Input>
-    <Output>list(60)</Output>
+    <Input>int(66)--int(65)--int(76)--int(9)--int(22)</Input>
+    <Output>list(70)</Output>
   </Example>
   <Example>
-    <Input>list(31'95'18'92'99)--int(41)</Input>
-    <Output>list(41)</Output>
-  </Example>
-  <Example>
-    <Input>list(35'22'5'67'20'83'96'52'12'98'74'25'82'54'93'72'48'6'33'77'38'59'71'75'7'44'11'57'29'89'50'80'30'90'65'13'49'27'41'86'47'40'39'58'24'78'10'94'99'92'79'8'70'81)--int(85)</Input>
+    <Input>int(68)--int(43)--int(0)--int(44)--int(6)</Input>
     <Output>list(72)</Output>
   </Example>
   <Example>
-    <Input>list(35'67'32'55'65'57'43'46'54'44'71'69'37'3'13'70'68'58'39'15'62'30'83'90'82'24'63'73'5'76'92'95'91'26'27'34'64'81'25'16'47'49'61'36'48'1'88'66'86'98'9'12'87'84'97'21'74'51'22'29'33'50'96'72'56'19'89'59'42'53'6'75'31'17'78'14'28'85'10'23'11'77'38'93'80'7'94'60'4'79'45'41'2'52'100'40'99'20'18)--int(91)</Input>
-    <Output>list(91)</Output>
+    <Input>int(45)--int(23)--int(84)--int(93)--int(20)</Input>
+    <Output>list(49)</Output>
   </Example>
+  <Example>
+    <Input>int(62)--int(22)--int(59)--int(77)--int(79)</Input>
+    <Output>list(66)</Output>
+  </Example>
+  <Program>C_0_access C_1_map C_2_1 C_4_zipWith C_5_plus C_6_x1 C_13_take C_14_reverse C_15_plus |C_40_[1'2'3]| C_41_x1 C_43_sort |C_130_[1'2'3]|</Program>
 </ProgamSpec>

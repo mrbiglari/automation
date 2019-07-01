@@ -103,8 +103,12 @@ namespace Synthesis
 
         private static ProgramSpec BuildProgramSpecFromSpec(XElement componentSpecsXML, List<TypeSpec> typeSpecs)
         {
+
+            var program = String.Join(" ",componentSpecsXML.Descendants(Resources.key_program).First().Value.Trim().SplitBy(" ").OrderBy(x => Int32.Parse(x.SplitBy("_").ElementAt(1))).ToList());
+
+
             var programDefinition = componentSpecsXML.Descendants(Resources.key_programDefinition).First().Value.Trim();
-            
+
             var inputParametersSplittedList = programDefinition.SplitBy(Symbols.argSeperator).First().SplitBy(Symbols.seperator)
                 .Select(
                     (x, index) =>
@@ -154,7 +158,7 @@ namespace Synthesis
                 examples.Add(new Example(parameterList, typeSpecs, context));
             }
 
-            return new ProgramSpec(examples, argTypesList, parameters);
+            return new ProgramSpec(examples, argTypesList, parameters, program);
         }
 
         public static void UpdateParametersList(List<Tuple<int, string>> parameters, ParameterType parameterType)

@@ -12,12 +12,14 @@ namespace Synthesis
         public List<Example> examples;
         public List<Arg> args;
         public List<Parameter> parameters;
+        public string program;
 
-        public ProgramSpec(List<Example> examples, List<Arg> args, List<Parameter> parameters)
+        public ProgramSpec(List<Example> examples, List<Arg> args, List<Parameter> parameters, string program)
         {
             this.examples = examples;
             this.args = args;
             this.parameters = parameters;
+            this.program = program;
         }
     }
 

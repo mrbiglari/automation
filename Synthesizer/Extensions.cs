@@ -237,7 +237,8 @@ namespace Synthesis
                 list.Add(i);
             }
             list = list.Shuffle(random).ToList();
-            return list.GetRange(0, random.Next(limit));
+            var l = random.Next(1, limit - 2);
+            return list.GetRange(0, l);
         }
 
         public static int InstantiateRandomly_Int(this Random random, int limit)

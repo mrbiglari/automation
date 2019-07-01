@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>int(x1),int(x2),int(x3),int(x4),list(x5) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>int(27)--int(5)--int(71)--int(28)--list(96'76'37'8'55'82'3'57'49'89'88'42'48'71'72'21'93'43'29'22'56'59'16'87'78'79'60'84'24'46'30'4'10'95'7'97'47'33'69'23'52'5'13'98'25'100)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(79)--int(4)--int(34)--int(96)--list(43'17'9'86'64'16'87'34'66'45'61'4'80'57'50'21'48'51'24'27'40'69'33'96'39'13'63'41'38'2'76'83'14)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(93)--int(18)--int(56)--int(32)--list(1'47'38'93'86'14'23'58'34)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(88)--int(25)--int(36)--int(84)--list(84'28'12'99'3'49'41'20'25'70'91'67'98'29'32'23'35'46'54'4'87'72'93'86'48'10'13'94'77'59'74'80'16'15'6'60'61'65'11'17'37'82'62'76'34'68'58'27'45'1'2'78'92'71'55'64'73'69'21'79'40'36'7'53'66)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(94)--int(99)--int(78)--int(98)--list(9'6'57'74'88'89'1'17'81'18)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Program>C_0_head C_1_reverse C_4_map C_13_sort C_14_pow C_15_x3 C_40_zipWith C_121_take |C_122_[1'2'3]| C_123_min |C_364_[1'2'3]| C_365_1</Program>
+</ProgamSpec>

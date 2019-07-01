@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>int(x1),int(x2),list(x3),int(x4),int(x5) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>int(69)--int(2)--list(98'97'96'94'91'89'88'87'86'82'79'75'74'73'72'71'70'68'66'65'64'63'61'60'58'56'52'42'41'40'39'37'35'33'32'30'29'28'27'23'21'20'19'17'16'14'12'11'7'3'2'1)--int(30)--int(95)</Input>
+    <Output>list(5268540)</Output>
+  </Example>
+  <Example>
+    <Input>int(36)--int(94)--list(95'90'88'86'85'82'79'78'65'64'62'61'58'47'43'37'34'26'24'23'16'9'7'6'3)--int(12)--int(84)</Input>
+    <Output>list(1039008)</Output>
+  </Example>
+  <Example>
+    <Input>int(97)--int(98)--list(25'15'82'99'53'78'98'48'83'18'20'33'63'37'26'62'45'86'4'30'79'40'92'14'91'70'66'100'38)--int(98)--int(20)</Input>
+    <Output>list(4655686)</Output>
+  </Example>
+  <Example>
+    <Input>int(42)--int(5)--list(16'2'5'63'42'74'22'41'78'23'28'43'54'39'99'84'40'66'18'25'21'52'59'86'61'51'30'9'49'17'100'55'70'34'50'79'48'77'94'10'57'69'64'33'73'44'83'96'75'29'19'13'97'67'92'8'1'98'47'91'53'36'11'32'68'35'12'80'24'62'37'3'27'90'46'72'87'26'60'93'15'71'38'14'82'56'65'76'45'7)--int(60)--int(50)</Input>
+    <Output>list(8580480)</Output>
+  </Example>
+  <Example>
+    <Input>int(59)--int(27)--list(75'69'83'24'87'11'32'53'38'73'98'43'4'55'68'95'59'88'41'25'50)--int(43)--int(7)</Input>
+    <Output>list(868342)</Output>
+  </Example>
+  <Program>C_0_sum C_1_zipWith C_4_sort C_5_map C_6_mul C_13_take C_16_reverse C_17_mul C_18_x4 C_40_x3 C_41_x5 C_49_x3</Program>
+</ProgamSpec>

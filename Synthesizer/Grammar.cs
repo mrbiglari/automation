@@ -227,24 +227,24 @@ namespace Synthesis
                     stopWatch.Start();
 
                     #region reject with base-lemmas
-                    //Exclude using Lemmas
-                    //var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
+                   // Exclude using Lemmas
+                    var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
 
-                    //foreach (var lemma in lemmas)
-                    //{
-                    //    //checking consistency with the knoweldge base (Lemmas)
-                    //    var lemmaAsExpersion = lemma.AsExpression(context);
-                    //    var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
-                    //    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-                    //    if (checkIfUnSAT)
-                    //    {
-                    //        holeToFill.MakeHole();
-                    //        possibleProductionRules.Remove(choosenProductionRule);
-                    //        lemmaCounter++;
-                    //        extensionCounter++;
-                    //        break;
-                    //    }
-                    //}
+                    foreach (var lemma in lemmas)
+                    {
+                        //checking consistency with the knoweldge base (Lemmas)
+                        var lemmaAsExpersion = lemma.AsExpression(context);
+                        var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                        if (checkIfUnSAT)
+                        {
+                            holeToFill.MakeHole();
+                            possibleProductionRules.Remove(choosenProductionRule);
+                            lemmaCounter++;
+                            extensionCounter++;
+                            break;
+                        }
+                    }
                     var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
                     stopWatch.Reset();
                     #endregion
@@ -252,25 +252,25 @@ namespace Synthesis
                     #region reject with extended-lemmas
                     stopWatch.Start();
                     //Exclude using unSATPrograms
-                    foreach (var unSATCoreProgram in unSATCorePrograms)
-                    {
-                        //checking consistency with the knoweldge base (UnSAT Programs)
-                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+                    //foreach (var unSATCoreProgram in unSATCorePrograms)
+                    //{
+                    //    //checking consistency with the knoweldge base (UnSAT Programs)
+                    //    var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                    //    var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
 
-                        var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                        var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                    //    var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                    //    var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
 
-                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
-                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-                        if (checkIfUnSAT)
-                        {
-                            holeToFill.MakeHole();
-                            possibleProductionRules.Remove(choosenProductionRule);
-                            extensionCounter++;
-                            break;
-                        }
-                    }
+                    //    var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
+                    //    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                    //    if (checkIfUnSAT)
+                    //    {
+                    //        holeToFill.MakeHole();
+                    //        possibleProductionRules.Remove(choosenProductionRule);
+                    //        extensionCounter++;
+                    //        break;
+                    //    }
+                    //}
                     #endregion
 
                     var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;                    

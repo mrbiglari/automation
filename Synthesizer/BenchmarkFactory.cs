@@ -153,7 +153,7 @@ namespace Synthesizer
 
                    
                 }
-                if (programSpecs.Count == 50)
+                if (programSpecs.Count == 100)
                     break;
             }
         }

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>int(x1),list(x2),int(x3),int(x4),int(x5) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>int(5)--list(39'86'23'31'24'5'66'45'41'15'33'43'55'100'71'94'22'99'80'25'36'67'32'18'95'37'20'52'68'72'38)--int(59)--int(33)--int(80)</Input>
+    <Output>list(148)</Output>
+  </Example>
+  <Example>
+    <Input>int(71)--list(63'25'84'85'5'38'19'71'67)--int(86)--int(39)--int(32)</Input>
+    <Output>list(172)</Output>
+  </Example>
+  <Example>
+    <Input>int(89)--list(86'97'76'19'25'17'32'49'36'31'24'75'34'96'59'87'77'80'98'92'7'41'69'11'44'23'83'43'84'62'70'18'39'90'30'66'46'68'5'10'47'40'1'45'61'33'58'63'67'93'26'57'73'74'89'27'72'13'14'28'12'64'88'95)--int(79)--int(76)--int(31)</Input>
+    <Output>list(259)</Output>
+  </Example>
+  <Example>
+    <Input>int(16)--list(14'46'96'65'13'16'80'10'94'33'89'30'7'79'8'29'97)--int(1)--int(35)--int(91)</Input>
+    <Output>list(13)</Output>
+  </Example>
+  <Example>
+    <Input>int(86)--list(77'14'6'81'94'52)--int(50)--int(91)--int(36)</Input>
+    <Output>list(97)</Output>
+  </Example>
+  <Program>C_0_sum C_1_reverse C_4_map C_13_sort C_14_minus C_15_2 C_40_zipWith C_121_take |C_122_[1'2'3]| C_123_plus C_364_x2 C_365_x3</Program>
+</ProgamSpec>

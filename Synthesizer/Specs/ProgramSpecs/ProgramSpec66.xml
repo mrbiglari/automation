@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>int(x1),int(x2),int(x3),int(x4),int(x5) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>int(46)--int(17)--int(28)--int(47)--int(85)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(16)--int(48)--int(19)--int(95)--int(11)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(99)--int(25)--int(93)--int(78)--int(62)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(10)--int(63)--int(79)--int(54)--int(73)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Example>
+    <Input>int(35)--int(63)--int(86)--int(56)--int(36)</Input>
+    <Output>list(1)</Output>
+  </Example>
+  <Program>C_0_last C_1_reverse C_4_zipWith C_13_sort |C_14_[1'2'3]| C_15_plus C_40_take C_121_map C_122_x2 |C_364_[1'2'3]| C_365_div C_366_3</Program>
+</ProgamSpec>

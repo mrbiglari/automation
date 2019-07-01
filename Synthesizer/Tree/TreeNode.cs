@@ -53,6 +53,23 @@ namespace CSharpTree
         {
             get { return !ContainsHoles(); }
         }
+
+        public int Size
+        {
+            get
+            {
+                if (Children.All(x => x.IsLeaf))
+                    return 1;
+                else
+                {
+                    var t1 = Children.Where(x => !x.IsLeaf).ToList();
+                    var t2 = t1.Select(x => x.Size).ToList();
+                    var t3 = t2.Sum();
+                    return (Children.Where(x => !x.IsLeaf).Select(x => x.Size)).Sum() + 1;
+                }
+                    
+            }
+        }
         public bool ContainsHoles()
         {
             var isHole = IsHole;

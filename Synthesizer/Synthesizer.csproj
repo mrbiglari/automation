@@ -129,130 +129,111 @@
     <Content Include="Specs\ProgramSpec.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec1.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec10.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec11.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec12.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec13.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec14.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec15.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec16.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec17.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec18.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec19.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec2.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec20.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec21.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec22.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec23.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec24.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec25.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec26.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec27.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec28.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec29.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec3.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec30.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec31.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec32.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec33.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec34.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec35.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec36.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec37.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec38.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec39.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec4.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec40.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec5.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec6.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec7.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec8.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Specs\ProgramSpecs\ProgramSpec9.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Specs\ProgramSpecs\ProgramSpec1.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec10.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec100.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec11.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec12.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec13.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec14.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec15.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec16.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec17.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec18.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec19.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec2.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec20.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec21.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec22.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec23.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec24.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec25.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec26.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec27.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec28.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec29.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec3.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec30.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec31.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec32.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec33.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec34.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec35.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec36.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec37.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec38.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec39.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec4.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec40.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec41.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec42.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec43.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec44.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec45.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec46.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec47.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec48.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec49.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec5.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec50.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec51.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec52.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec53.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec54.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec55.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec56.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec57.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec58.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec59.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec6.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec60.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec61.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec62.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec63.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec64.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec65.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec66.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec67.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec68.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec69.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec7.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec70.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec71.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec72.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec73.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec74.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec75.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec76.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec77.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec78.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec79.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec8.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec80.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec81.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec82.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec83.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec84.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec85.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec86.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec87.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec88.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec89.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec9.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec90.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec91.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec92.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec93.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec94.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec95.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec96.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec97.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec98.xml" />
+    <Content Include="Specs\ProgramSpecs\ProgramSpec99.xml" />
     <Content Include="Specs\TypeSpec.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Microsoft.Z3.x64.4.8.1\build\Microsoft.Z3.x64.targets" Condition="Exists('packages\Microsoft.Z3.x64.4.8.1\build\Microsoft.Z3.x64.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

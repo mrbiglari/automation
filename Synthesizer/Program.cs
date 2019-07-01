@@ -139,7 +139,7 @@ namespace Synthesis
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
 
-                for (int i = 1; i <= 40; i++)
+                for (int i = 1; i <= 100; i++)
                 {
                     var stopWatch1 = new Stopwatch();
                     stopWatch1.Start();
@@ -172,16 +172,16 @@ namespace Synthesis
                             stopWatch.Start();
 
                             //creating lemma from UnSATCore
-                            //var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
-                            //lemmas.Add(lemma);
+                            var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
+                            lemmas.Add(lemma);
 
                             var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
                             stopWatch.Reset();
                             stopWatch.Start();
 
                             //creating unSAT Programs from UnSATCore
-                            var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
-                            unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                            //var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
+                            //unSATCorePrograms.Add(rootOfUnSATCoreProgram);
 
                             var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
                             lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
@@ -195,13 +195,19 @@ namespace Synthesis
 
                         if (root.IsConcrete)
                         {
+                            var program_as_string = SAT_Encode(root, context);
+
+                            //if (!program_as_string.Equals(programSpec.program))
+                            //{
+                            //    root = new TreeNode<string>();
+                            //    grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
+                            //    continue;
+                            //}
+                                
                             Console.WriteLine("\nConcrete progam found:");
-                            root.Visualize();
+                            //root.Visualize();
                             var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{i}.xml");
                             Console.WriteLine($"####################################### {benchmark_Id}");
-
-
-                            var program_as_string = SAT_Encode(root, context);
 
                             //var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 0 : extensionCounter / lemmaCounter;
                             //var lemmaCreationAvg = (lemmaCreationTimes.Count() != 0) ? lemmaCreationTimes.Average() : 0;
@@ -209,7 +215,7 @@ namespace Synthesis
                             //string createText = $"{lemmas.Count() + extensionCounter} {unSATCorePrograms.Count()} {ratio} {lemmaCreationAvg} {pruningTimesAvg}" + Environment.NewLine;
                             stopWatch1.Stop();
                             
-                            string createText = $"{stopWatch1.Elapsed.TotalSeconds.ToString()} {i} \n";
+                            string createText = $"{stopWatch1.Elapsed.TotalSeconds.ToString()} {i} {lemmas.Count} {root.Size} {program_as_string}\n";
                             File.AppendAllText("C:\\NewFolder\\results.txt", createText);
                             lemmaCounter = 0;
                             extensionCounter = 0;
@@ -256,7 +262,7 @@ namespace Synthesis
         {
             
             //var rand = new Random(6);
-            var rand = new Random(1);
+            var rand = new Random(2);
             var program = new Program(rand);
             program.stopwatch = new Stopwatch();
             program.stopwatch.Start();
