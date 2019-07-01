@@ -213,6 +213,7 @@ namespace Synthesis
                 //var index = 0;
                 //var index = 1;
                 var choosenProductionRule = possibleProductionRules.ElementAt(index);
+                //var choosenProductionRule = possibleProductionRules.First();
 
                 var terminal = choosenProductionRule.rightHandSide.First();
 
@@ -224,25 +225,31 @@ namespace Synthesis
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
+
+                    #region reject with base-lemmas
                     //Exclude using Lemmas
-                    var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
-                    foreach (var lemma in lemmas)
-                    {
-                        //checking consistency with the knoweldge base (Lemmas)
-                        var lemmaAsExpersion = lemma.AsExpression(context);
-                        var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
-                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-                        if (checkIfUnSAT)
-                        {
-                            holeToFill.MakeHole();
-                            possibleProductionRules.Remove(choosenProductionRule);
-                            lemmaCounter++;
-                            extensionCounter++;
-                            break;
-                        }
-                    }
+                    //var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
+
+                    //foreach (var lemma in lemmas)
+                    //{
+                    //    //checking consistency with the knoweldge base (Lemmas)
+                    //    var lemmaAsExpersion = lemma.AsExpression(context);
+                    //    var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                    //    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                    //    if (checkIfUnSAT)
+                    //    {
+                    //        holeToFill.MakeHole();
+                    //        possibleProductionRules.Remove(choosenProductionRule);
+                    //        lemmaCounter++;
+                    //        extensionCounter++;
+                    //        break;
+                    //    }
+                    //}
                     var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
                     stopWatch.Reset();
+                    #endregion
+
+                    #region reject with extended-lemmas
                     stopWatch.Start();
                     //Exclude using unSATPrograms
                     foreach (var unSATCoreProgram in unSATCorePrograms)
@@ -264,8 +271,10 @@ namespace Synthesis
                             break;
                         }
                     }
+                    #endregion
+
                     var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;                    
-                    Console.WriteLine($"Extension/Lemma ratio:{ratio}");
+                    //Console.WriteLine($"Extension/Lemma ratio:{ratio}");
                     var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
                     pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
@@ -280,6 +289,7 @@ namespace Synthesis
                     return hole;
                 }
             }
+
             return null;
         }
 

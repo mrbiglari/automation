@@ -91,6 +91,7 @@ namespace Synthesis
 
                         productions.Add(new Production(leftHandsideSymbol, splittedRHS, splittedRHS1.Count()));
                     }
+
                 }
 
             }

@@ -11,7 +11,7 @@ namespace Synthesizer
         public const string specsFolderPath = "Specs/";
         public const string path_grammarSpec = specsFolderPath + "GrammarSpec.xml";
         public const string path_componentSpec = specsFolderPath + "ComponentSpecs.xml";
-        public const string path_programSpec = specsFolderPath + "ProgramSpec.xml";
+        public const string path_programSpec = specsFolderPath + "ProgramSpecs/" + "ProgramSpec.xml";
         public const string path_typeSpec = specsFolderPath + "TypeSpec.xml";
 
         public const string key_args = "Arg";

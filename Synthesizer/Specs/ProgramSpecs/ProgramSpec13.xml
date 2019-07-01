@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>list(x1), int(x2) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>list(84'85'83'6'18'36'27'99'98'40'50'88'70'64'20'71'42'56'16'44'48)--int(9)</Input>
+    <Output>list(-74)</Output>
+  </Example>
+  <Example>
+    <Input>list(6'10'95'8'22'50'60'99'9'51'53'93'49'65'73'80'26'63'55'91'84'89'54'18'86'66'28'38'45'1'23'32'94'13'61'88'77'20'79'71'47'90'42'14'19'72'100'87'64'43'81'12'7'67'52'70'83'58'35)--int(54)</Input>
+    <Output>list(-6)</Output>
+  </Example>
+  <Example>
+    <Input>list(97)--int(49)</Input>
+    <Output>list(-96)</Output>
+  </Example>
+  <Example>
+    <Input>list(60'1'82'98'17'72'3'15'83'52'48'43'68'79'78'47'28'87'37'53'71'96'46'59'36'50'56'39'7'74'97'11'57'38'93'44'22'9'16'58'45'88)--int(82)</Input>
+    <Output>list(-1)</Output>
+  </Example>
+  <Example>
+    <Input>list(5'37)--int(87)</Input>
+    <Output>list(-5)</Output>
+  </Example>
+</ProgamSpec>

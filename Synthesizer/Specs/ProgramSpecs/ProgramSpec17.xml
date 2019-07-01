@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProgamSpec>
+  <ProgramDefinition>list(x1), int(x2) -- list(y)</ProgramDefinition>
+  <Example>
+    <Input>list(23'38'39'46'55'77'42'57'6'79'13'78'4'89'7'48'75'86'45'22'99'51'30'20'82'65'100'97'81'44'31'87'54'24'26'93'76'16'64'35'25'19'90'47'68'95)--int(28)</Input>
+    <Output>list(39)</Output>
+  </Example>
+  <Example>
+    <Input>list(24'57'7'76'86'53'28'47'36'31'18'85'91'49'54'13'68'20'5'75'38'84)--int(44)</Input>
+    <Output>list(58)</Output>
+  </Example>
+  <Example>
+    <Input>list(78'95)--int(47)</Input>
+    <Output>list(96)</Output>
+  </Example>
+  <Example>
+    <Input>list(30'98'88'70'6'35'63'34'48'49'17'53'76'45'50'4'10'90'61'51'11'55'12'81'28'67'38'16'84'100'9'43'85'92'69'62'89'82'3'95'21'79'60'42'44'14'74'25'91'73'77'93'78'83'32'40'27'7'33'23'66'36'57'80'71'97'18'96'68'31'56'41'75'26'24'94'46'65'58'37'15'22'19'64'8'59'20'29'2'54'99'39)--int(65)</Input>
+    <Output>list(99)</Output>
+  </Example>
+  <Example>
+    <Input>list(59'81'64'87'78'94'43'44'5'83'99'29'49'50'35'31'11'2'40)--int(88)</Input>
+    <Output>list(82)</Output>
+  </Example>
+</ProgamSpec>

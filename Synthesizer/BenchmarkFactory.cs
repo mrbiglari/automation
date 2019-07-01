@@ -1,4 +1,5 @@
 ﻿using CSharpTree;
+using Microsoft.Z3;
 using Synthesis;
 using System;
 using System.Collections.Generic;
@@ -47,7 +48,7 @@ namespace Synthesizer
             }
         }
 
-        public static void WriteBenchmark(TreeNode<string> root, List<List<object>> programSpec, List<Parameter> parameters)
+        public static void WriteBenchmark(TreeNode<string> root, List<List<object>> programSpec, List<Parameter> parameters, Context context)
         {
             Assembly asm = Assembly.GetExecutingAssembly();
             string path = System.IO.Path.GetDirectoryName(asm.Location);
@@ -89,6 +90,11 @@ namespace Synthesizer
 
             //var xElement_program = new XElement(Resources.key_program);
             //xElement_program.Value = root.Visualize
+
+            var xElement_program = new XElement("Program");
+            xElement_program.Add(Program.SAT_Encode(root, context));
+            xElement_programSpec.Add(xElement_program);
+
             xElement_programSpec.Save($"{folderPath}\\ProgramSpec{files.Count() + 1}.xml");
         }
 
@@ -125,7 +131,7 @@ namespace Synthesizer
                                 if (programSpec.Count == 5)
                                 {
                                     programSpecs.Add(programSpec);
-                                    WriteBenchmark(root, programSpec, parameters);
+                                    WriteBenchmark(root, programSpec, parameters, context);
 
                                     SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
 
