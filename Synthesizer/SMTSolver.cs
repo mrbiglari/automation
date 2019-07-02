@@ -210,6 +210,7 @@ namespace Synthesis
             var solver = InitializeSolver(context);
             solver.AssertAndTrack(check, check);
             var result = solver.Check();
+
             return (result == Status.UNSATISFIABLE);
         }
 

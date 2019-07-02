@@ -138,7 +138,6 @@ namespace Synthesis
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
             {
-
                 for (int i = 1; i <= 100; i++)
                 {
                     var stopWatch1 = new Stopwatch();
@@ -172,16 +171,16 @@ namespace Synthesis
                             stopWatch.Start();
 
                             //creating lemma from UnSATCore
-                            var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
-                            lemmas.Add(lemma);
+                            //var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
+                            //lemmas.Add(lemma);
 
                             var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
                             stopWatch.Reset();
                             stopWatch.Start();
 
                             //creating unSAT Programs from UnSATCore
-                            //var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
-                            //unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                            var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
+                            unSATCorePrograms.Add(rootOfUnSATCoreProgram);
 
                             var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
                             lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
@@ -266,8 +265,8 @@ namespace Synthesis
             var program = new Program(rand);
             program.stopwatch = new Stopwatch();
             program.stopwatch.Start();
-            //program.Synthesize_WhileTrue();
-            BenchmarkFactory.CreateBenchmark(rand);
+            program.Synthesize_WhileTrue();
+            //BenchmarkFactory.CreateBenchmark(rand);
 
         }
     }
