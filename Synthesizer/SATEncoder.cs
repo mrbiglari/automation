@@ -257,11 +257,11 @@ namespace Synthesis
                     value = spec
                 });
 
-                var s = nodeSpec;
-                var s2 = nodeSpec;
+                //var s = nodeSpec;
+                //var s2 = nodeSpec;
 
-                var c = context.MkNot(context.MkImplies(context.MkAnd(s.ToArray()), context.MkAnd(s2.ToArray())));
-                var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, c);
+                //var c = context.MkNot(context.MkImplies(context.MkAnd(s.ToArray()), context.MkAnd(s2.ToArray())));
+                //var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, c);
 
 
 

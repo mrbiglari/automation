@@ -12,7 +12,7 @@ using Synthesizer;
 namespace Synthesis
 {
     public class Program
-    {                
+    {
         public UnSatCores unSATCores;
         public List<TreeNode<string>> unSATCorePrograms;
         public Lemmas lemmas;
@@ -128,27 +128,17 @@ namespace Synthesis
 
         public static string SAT_Encode(TreeNode<string> root, Context context)
         {
-            var sat_encoded_program = SATEncoder<string>.SATEncode(root, context);            
+            var sat_encoded_program = SATEncoder<string>.SATEncode(root, context);
             var sat_encoded_pogram_as_string = sat_encoded_program.Args.ToList().Select(x => x.ToString()).OrderBy(x => Int32.Parse(x.SplitBy("_").ElementAt(1))).ToList();
             return String.Join(" ", sat_encoded_pogram_as_string);
         }
 
-        public void Synthesize(int demand)
+
+
+        public void Synthesize(int demand, Params param, Context context)
         {
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
-            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {
-                for (int i = 1; i <= 100; i++)
-                {
-                    var stopWatch1 = new Stopwatch();
-                    stopWatch1.Start();
-
-                    var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
-                    var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec.Replace(".xml", $"{i}.xml"), context, typeSpecs);
-                    var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
-                    var grammarGround = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
-                    z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
-
+                                                              
                     var numberOfPrograms = 0;
                     lemmaCreationTimes = new List<long>();
                     pruningTimes = new List<long>();
@@ -159,7 +149,7 @@ namespace Synthesis
                     while (true)
                     {
                         //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                        currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes);
+                        currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
                         root.Visualize();
                         grammar.Propogate(root, lemmas, context, grammar);
 
@@ -168,22 +158,37 @@ namespace Synthesis
                         if (unSATCore?.Count != 0)
                         {
                             var stopWatch = new Stopwatch();
-                            stopWatch.Start();
+                            var elapsedTime_Base = default(long) ;
+                            var elapsedTime_Extension = default(long);
 
-                            //creating lemma from UnSATCore
-                            //var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
-                            //lemmas.Add(lemma);
+                            if (param.base_lemmas)
+                            {
+                                stopWatch.Start();
 
-                            var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                            stopWatch.Reset();
-                            stopWatch.Start();
+                                //creating lemma from UnSATCore
+                                var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
+                                lemmas.Add(lemma);
 
-                            //creating unSAT Programs from UnSATCore
-                            var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
-                            unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                                stopWatch.Stop();
+                                elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                                stopWatch.Reset();
+                            }
 
-                            var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
-                            lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
+                            if (param.extended_lemmas)
+                            {
+                                stopWatch.Start();
+
+                                //creating unSAT Programs from UnSATCore
+                                var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
+                                unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+
+                                stopWatch.Stop();
+                                elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                            }
+
+                            if(elapsedTime_Base != 0 && elapsedTime_Extension != 0)
+                                lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
+
                             //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
                             root = BackTrack(unSATCore, grammar, currentNode, root);
@@ -202,7 +207,7 @@ namespace Synthesis
                             //    grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
                             //    continue;
                             //}
-                                
+
                             Console.WriteLine("\nConcrete progam found:");
                             //root.Visualize();
                             var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{i}.xml");
@@ -212,10 +217,7 @@ namespace Synthesis
                             //var lemmaCreationAvg = (lemmaCreationTimes.Count() != 0) ? lemmaCreationTimes.Average() : 0;
                             //var pruningTimesAvg = (pruningTimes.Count() != 0) ? pruningTimes.Average() : 0;
                             //string createText = $"{lemmas.Count() + extensionCounter} {unSATCorePrograms.Count()} {ratio} {lemmaCreationAvg} {pruningTimesAvg}" + Environment.NewLine;
-                            stopWatch1.Stop();
                             
-                            string createText = $"{stopWatch1.Elapsed.TotalSeconds.ToString()} {i} {lemmas.Count} {root.Size} {program_as_string}\n";
-                            File.AppendAllText("C:\\NewFolder\\results.txt", createText);
                             lemmaCounter = 0;
                             extensionCounter = 0;
                             lemmaCreationTimes.Clear();
@@ -240,36 +242,75 @@ namespace Synthesis
                                 numberOfPrograms++;
                         }
                     }
-                }
-            }
+            
         }
 
-        public void Synthesize_WhileTrue()
+        public void Synthesize_WhileTrue(Params param)
         {
             //while (true)
             //{
-                //Console.Write("Please specify the amount of concrete programs:");
-                //var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
-                var numberOfPrograms = 1;
-                Synthesize(numberOfPrograms);
-                Console.WriteLine($"Time Elapsed: {stopwatch.Elapsed.Seconds}");
+            //Console.Write("Please specify the amount of concrete programs:");
+            //var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
+
+            using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
+            {
+                var stopWatch1 = new Stopwatch();
+                stopWatch1.Start();
+
+                for (int i = 1; i <= 100; i++)
+                {
+                    var numberOfPrograms = 1;
+
+                    var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
+                    var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec.Replace(".xml", $"{i}.xml"), context, typeSpecs);
+                    var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
+                    var grammarGround = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
+                    z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
+
+                    Synthesize(numberOfPrograms, param, context);
+                    Console.WriteLine($"Time Elapsed: {stopwatch.Elapsed.Seconds}");
+
+                    stopWatch1.Stop();
+                    string createText = $"{stopWatch1.Elapsed.TotalSeconds.ToString()} {i} {lemmas.Count} {root.Size} {program_as_string}\n";
+                    File.AppendAllText("C:\\NewFolder\\results.txt", createText);
+                }
+            }
             //}
         }
 
         public Stopwatch stopwatch;
         static void Main(string[] args)
         {
-            
+
+            var param = new Params() { extended_lemmas = true };
+
             //var rand = new Random(6);
             var rand = new Random(2);
             var program = new Program(rand);
             program.stopwatch = new Stopwatch();
             program.stopwatch.Start();
-            program.Synthesize_WhileTrue();
+            program.Synthesize_WhileTrue(param);
             //BenchmarkFactory.CreateBenchmark(rand);
 
         }
     }
 
-   
+    public class Params
+    {
+        public bool extended_lemmas = false;
+        public bool base_lemmas = false;
+    }
+
+    public class SyntesisParams
+    {
+        public List<Type> typeSpecs;
+        public ProgramSpec programSpec;
+
+        public Grammar grammar;
+        public Grammar grammarGround;
+        public ProgramSpec programSpec;
+        public ProgramSpec programSpec;
+
+    }
+
 }

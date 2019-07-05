@@ -113,9 +113,9 @@ namespace Synthesis
                 }
             }
         }
-        public TreeNode<string> Decide(TreeNode<string> currentNode, Lemmas lemmas, Context context, Grammar grammar)
+        public TreeNode<string> Decide(TreeNode<string> currentNode, Lemmas lemmas, Context context, Grammar grammar, Params param)
         {
-            currentNode = Decide_AST(currentNode, lemmas, context, grammar);
+            currentNode = Decide_AST(currentNode, lemmas, context, grammar, param);
             return currentNode;
         }
 
@@ -140,7 +140,7 @@ namespace Synthesis
             throw new ArgumentException("no holes found");
         }
 
-        public TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar, Params param)
         {
             var hole = DFS(root, (x) => x.IsHole);
 
@@ -195,7 +195,7 @@ namespace Synthesis
             return null;
         }
 
-        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param)
         {
             var hole = DFS(root, (x) => x.IsHole);
 
@@ -224,58 +224,77 @@ namespace Synthesis
                 if (RuleResultsInLeaf(grammar, choosenProductionRule))
                 {
                     var stopWatch = new Stopwatch();
-                    stopWatch.Start();
+                    var elapsedTime_Base = default(long);
+                    var elapsedTime_Extension = default(long);
 
                     #region reject with base-lemmas
-                   // Exclude using Lemmas
-                    //var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
+                    if (param.base_lemmas)
+                    {
+                        stopWatch.Start();
+                        //Reject current partial program using Lemmas
+                        var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
 
-                    //foreach (var lemma in lemmas)
-                    //{
-                    //    //checking consistency with the knoweldge base (Lemmas)
-                    //    var lemmaAsExpersion = lemma.AsExpression(context);
-                    //    var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
-                    //    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-                    //    if (checkIfUnSAT)
-                    //    {
-                    //        holeToFill.MakeHole();
-                    //        possibleProductionRules.Remove(choosenProductionRule);
-                    //        lemmaCounter++;
-                    //        extensionCounter++;
-                    //        break;
-                    //    }
-                    //}
-                    var elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                    stopWatch.Reset();
+                        foreach (var lemma in lemmas)
+                        {
+                            //checking consistency with the knoweldge base (Lemmas)
+                            var lemmaAsExpersion = lemma.AsExpression(context);
+                            var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                            var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+
+                            if (checkIfUnSAT)
+                            {
+                                holeToFill.MakeHole();
+                                possibleProductionRules.Remove(choosenProductionRule);
+                                lemmaCounter++;
+                                extensionCounter++;
+                                break;
+                            }
+                        }
+
+                        stopWatch.Stop();
+                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;                        
+                        stopWatch.Reset();
+                    }
                     #endregion
 
                     #region reject with extended-lemmas
-                    stopWatch.Start();
-                    //Exclude using unSATPrograms
-                    foreach (var unSATCoreProgram in unSATCorePrograms)
+                    if (param.extended_lemmas)
                     {
-                        //checking consistency with the knoweldge base (UnSAT Programs)
-                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
-
-                        var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                        var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-
-                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
-                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-                        if (checkIfUnSAT)
+                        stopWatch.Start();
+                        //Reject current partial program using unSATPrograms
+                        foreach (var unSATCoreProgram in unSATCorePrograms)
                         {
-                            holeToFill.MakeHole();
-                            possibleProductionRules.Remove(choosenProductionRule);
-                            extensionCounter++;
-                            break;
+                            //checking consistency with the knoweldge base (UnSAT Programs)
+                            var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                            var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+
+                            var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                            var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+
+                            var program = new Program(rand);
+                            var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
+                            var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
+
+                            var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
+                            var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+
+                            if (checkIfUnSAT)
+                            {
+                                holeToFill.MakeHole();
+                                possibleProductionRules.Remove(choosenProductionRule);
+                                extensionCounter++;
+                                break;
+                            }
                         }
+                        stopWatch.Stop();
+                        elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        stopWatch.Reset();
                     }
                     #endregion
 
                     var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;                    
                     //Console.WriteLine($"Extension/Lemma ratio:{ratio}");
-                    var elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                    
                     pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
                 }
@@ -285,7 +304,6 @@ namespace Synthesis
                     {
                         productions.Remove(holeToFill.rule);
                     }
-
                     return hole;
                 }
                 if(holeToFill.IsHole && possibleProductionRules.Count == 0)
@@ -298,7 +316,6 @@ namespace Synthesis
                     //holeToFill.Parent.holesBackTrack.Push(holeToFill.Parent.holesBackTrack.Pop());
                 }
             }
-
             return null;
         }
 
