@@ -228,7 +228,7 @@ namespace Synthesis
                     var elapsedTime_Extension = default(long);
 
                     #region reject with base-lemmas
-                    if (param.base_lemmas)
+                    if (param.use_base_lemmas)
                     {
                         stopWatch.Start();
                         //Reject current partial program using Lemmas
@@ -258,7 +258,7 @@ namespace Synthesis
                     #endregion
 
                     #region reject with extended-lemmas
-                    if (param.extended_lemmas)
+                    if (param.use_extended_lemmas)
                     {
                         stopWatch.Start();
                         //Reject current partial program using unSATPrograms

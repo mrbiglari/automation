@@ -13,7 +13,6 @@ namespace Synthesis
 {
     public class Program
     {
-        public UnSatCores unSATCores;
         public List<TreeNode<string>> unSATCorePrograms;
         public Lemmas lemmas;
         public Random random;
@@ -134,183 +133,206 @@ namespace Synthesis
         }
 
 
+        public void SynthesisReset(ref TreeNode<string> root, ref Lemmas lemmas, ref List<TreeNode<string>> unSATCorePrograms)
+        {
+            root = new TreeNode<string>();
+            lemmas = new Lemmas();
+            unSATCorePrograms = new List<TreeNode<string>>();
+        }
 
-        public void Synthesize(int demand, Params param, Context context)
+
+        public TreeNode<string> Synthesize(int demand, Params param, Context context, SynthesisParams synthesisParams)
         {
             var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
-                                                              
-                    var numberOfPrograms = 0;
-                    lemmaCreationTimes = new List<long>();
-                    pruningTimes = new List<long>();
-                    var root = new TreeNode<string>();
-                    lemmas = new Lemmas();
-                    unSATCorePrograms = new List<TreeNode<string>>();
-                    var currentNode = root;
-                    while (true)
+
+            lemmaCreationTimes = new List<long>();
+            pruningTimes = new List<long>();
+            var root = new TreeNode<string>();
+            lemmas = new Lemmas();
+            unSATCorePrograms = new List<TreeNode<string>>();
+            var currentNode = root;
+            while (true)
+            {
+                //currentNode = grammar.Decide(root, lemmas, context, grammar);
+                currentNode = synthesisParams.grammar.Decide_AST(root, unSATCorePrograms, context, synthesisParams.grammar, z3ComponentsSpecs, synthesisParams.programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
+                root.Visualize();
+                synthesisParams.grammar.Propogate(root, lemmas, context, synthesisParams.grammar);
+
+                var unSATCore = CheckConflict(z3ComponentsSpecs, context, synthesisParams.programSpec, root, synthesisParams.grammar);
+
+                if (unSATCore?.Count != 0)
+                {
+                    var stopWatch = new Stopwatch();
+                    var elapsedTime_Base = default(long);
+                    var elapsedTime_Extension = default(long);
+
+                    if (param.use_base_lemmas)
                     {
-                        //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                        currentNode = grammar.Decide_AST(root, unSATCorePrograms, context, grammar, z3ComponentsSpecs, programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
-                        root.Visualize();
-                        grammar.Propogate(root, lemmas, context, grammar);
+                        stopWatch.Start();
 
-                        var unSATCore = CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
+                        //creating lemma from UnSATCore
+                        var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, synthesisParams.grammar);
+                        lemmas.Add(lemma);
 
-                        if (unSATCore?.Count != 0)
+                        stopWatch.Stop();
+                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                        stopWatch.Reset();
+                    }
+
+                    if (param.use_extended_lemmas)
+                    {
+                        stopWatch.Start();
+
+                        //creating unSAT Programs from UnSATCore
+                        var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, synthesisParams.grammarGround, context);
+                        unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+
+                        stopWatch.Stop();
+                        elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                    }
+
+                    if (elapsedTime_Base != 0 && elapsedTime_Extension != 0)
+                        lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
+
+                    //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
+
+                    root = BackTrack(unSATCore, synthesisParams.grammar, currentNode, root);
+                }
+
+                if (lemmas.IsUnSAT(context))
+                    return null;
+
+                else if (root.IsConcrete)
+                {
+                    if (param.find_groundTruth)
+                    {
+                        var program_as_string = SAT_Encode(root, context);
+                        if (!program_as_string.Equals(synthesisParams.programSpec.program))
                         {
-                            var stopWatch = new Stopwatch();
-                            var elapsedTime_Base = default(long) ;
-                            var elapsedTime_Extension = default(long);
-
-                            if (param.base_lemmas)
-                            {
-                                stopWatch.Start();
-
-                                //creating lemma from UnSATCore
-                                var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, grammar);
-                                lemmas.Add(lemma);
-
-                                stopWatch.Stop();
-                                elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                                stopWatch.Reset();
-                            }
-
-                            if (param.extended_lemmas)
-                            {
-                                stopWatch.Start();
-
-                                //creating unSAT Programs from UnSATCore
-                                var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, grammarGround, context);
-                                unSATCorePrograms.Add(rootOfUnSATCoreProgram);
-
-                                stopWatch.Stop();
-                                elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
-                            }
-
-                            if(elapsedTime_Base != 0 && elapsedTime_Extension != 0)
-                                lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
-
-                            //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
-
-                            root = BackTrack(unSATCore, grammar, currentNode, root);
-                        }
-
-                        if (lemmas.IsUnSAT(context))
-                            return;
-
-                        if (root.IsConcrete)
-                        {
-                            var program_as_string = SAT_Encode(root, context);
-
-                            //if (!program_as_string.Equals(programSpec.program))
-                            //{
-                            //    root = new TreeNode<string>();
-                            //    grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
-                            //    continue;
-                            //}
-
-                            Console.WriteLine("\nConcrete progam found:");
-                            //root.Visualize();
-                            var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{i}.xml");
-                            Console.WriteLine($"####################################### {benchmark_Id}");
-
-                            //var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 0 : extensionCounter / lemmaCounter;
-                            //var lemmaCreationAvg = (lemmaCreationTimes.Count() != 0) ? lemmaCreationTimes.Average() : 0;
-                            //var pruningTimesAvg = (pruningTimes.Count() != 0) ? pruningTimes.Average() : 0;
-                            //string createText = $"{lemmas.Count() + extensionCounter} {unSATCorePrograms.Count()} {ratio} {lemmaCreationAvg} {pruningTimesAvg}" + Environment.NewLine;
-                            
-                            lemmaCounter = 0;
-                            extensionCounter = 0;
-                            lemmaCreationTimes.Clear();
-                            pruningTimes.Clear();
-
-                            if (lemmas.Count > 3)
-                                ;
-
-                            //var result = CreateRandomParamsAndExecuteProgram(root, new Random());
-                            //ExecuteProgram(root, new object[] { new List<int> { 1, 34, 15, 6, 10 }, 2 });
-
                             root = new TreeNode<string>();
-                            currentNode = root;
-                            lemmas.Clear();
-                            unSATCorePrograms.Clear();
-                            //unSATCores.Clear();
-                            grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
-
-                            if (numberOfPrograms + 1 == demand)
-                                break;
-                            else
-                                numberOfPrograms++;
+                            synthesisParams.grammar = GrammarBuilder.Build(Resources.path_grammarSpec, synthesisParams.typeSpecs, random, synthesisParams.programSpec.parameters);
+                            continue;
                         }
                     }
-            
+
+                    var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{synthesisParams.benchmarkId}.xml");
+                    Console.WriteLine($"\nConcrete progam found for benchmark {benchmark_Id}:");
+                    root.Visualize();                    
+                    Console.WriteLine($"####################################### ");                      
+
+                    return root;
+                }
+            }
+
         }
 
         public void Synthesize_WhileTrue(Params param)
         {
-            //while (true)
-            //{
-            //Console.Write("Please specify the amount of concrete programs:");
-            //var numberOfPrograms = Convert.ToInt32(Console.ReadLine());
-
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {
-                var stopWatch1 = new Stopwatch();
-                stopWatch1.Start();
+            {                
+                var benchmark_count = Directory.GetFiles(Resources.path_programSpec_base).Length;
 
-                for (int i = 1; i <= 100; i++)
+                for (int benchmark_id = 1; benchmark_id <= benchmark_count; benchmark_id++)
                 {
+                    var stopWatch = new Stopwatch();
+                    stopWatch.Start();
+
                     var numberOfPrograms = 1;
 
                     var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
-                    var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec.Replace(".xml", $"{i}.xml"), context, typeSpecs);
+                    var programSpec = ProgramSpecBuilder.Build(Resources.path_programSpec_x.Replace(".xml", $"{benchmark_id}.xml"), context, typeSpecs);
                     var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
                     var grammarGround = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
-                    z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
+                    var z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
 
-                    Synthesize(numberOfPrograms, param, context);
-                    Console.WriteLine($"Time Elapsed: {stopwatch.Elapsed.Seconds}");
+                    var synthesisParams = new SynthesisParams()
+                    {
+                        typeSpecs = typeSpecs,
+                        programSpec = programSpec,
+                        grammar = grammar,
+                        grammarGround = grammarGround,
+                        z3ComponentSpecs = z3ComponentsSpecs,
+                        benchmarkId = benchmark_id
+                    };
 
-                    stopWatch1.Stop();
-                    string createText = $"{stopWatch1.Elapsed.TotalSeconds.ToString()} {i} {lemmas.Count} {root.Size} {program_as_string}\n";
-                    File.AppendAllText("C:\\NewFolder\\results.txt", createText);
+                    var roots = new List<TreeNode<string>>();
+                    for (int i = 0; i < numberOfPrograms; i++)
+                    {
+                        var root = Synthesize(numberOfPrograms, param, context, synthesisParams);
+                        roots.Add(root);
+                    }
+
+                    stopWatch.Stop();
+                    Console.WriteLine($"Time Elapsed: {(double)stopWatch.Elapsed.TotalSeconds}");
+
+                    
+                    if (numberOfPrograms == 1)
+                    {
+                        var root = roots.First();
+                        string createText = $"{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {SAT_Encode(root, context)}\n";
+                        if (benchmark_id == 1)
+                        {
+                            File.WriteAllText(Resources.path_results, String.Empty);
+                            File.AppendAllText(Resources.path_results, "{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {SAT_Encode(root, context)}\n");
+                        }
+                        File.AppendAllText(Resources.path_results, createText);
+                    }
+
+                    if (param.debug)
+                    {
+                        Console.WriteLine($"Press Enter to continue");
+                        Console.ReadLine();
+                    }
                 }
             }
-            //}
         }
 
-        public Stopwatch stopwatch;
         static void Main(string[] args)
         {
 
-            var param = new Params() { extended_lemmas = true };
-
-            //var rand = new Random(6);
+            var param = new Params() { use_base_lemmas = true, find_groundTruth = false };
+            
             var rand = new Random(2);
             var program = new Program(rand);
-            program.stopwatch = new Stopwatch();
-            program.stopwatch.Start();
-            program.Synthesize_WhileTrue(param);
-            //BenchmarkFactory.CreateBenchmark(rand);
+
+
+            Console.WriteLine("Enter options below:");
+            Console.WriteLine("1- Syntheisze from benchmarks");
+            Console.WriteLine("2- Generate benchmarks");
+
+            var option = Console.ReadLine();
+
+            if(option == "1")
+                program.Synthesize_WhileTrue(param);
+            else if (option == "1d")
+                {
+                    param.debug = true;
+                    program.Synthesize_WhileTrue(param);
+                }
+                    
+            else if (option == "2")
+                BenchmarkFactory.CreateBenchmark(rand);
 
         }
     }
 
     public class Params
     {
-        public bool extended_lemmas = false;
-        public bool base_lemmas = false;
+        public bool use_extended_lemmas = false;
+        public bool use_base_lemmas = false;
+        public bool find_groundTruth = false;
+        public bool debug = false;
     }
 
-    public class SyntesisParams
+    public class SynthesisParams
     {
-        public List<Type> typeSpecs;
+        public List<TypeSpec> typeSpecs;
         public ProgramSpec programSpec;
 
         public Grammar grammar;
         public Grammar grammarGround;
-        public ProgramSpec programSpec;
-        public ProgramSpec programSpec;
-
+        public List<Z3ComponentSpecs> z3ComponentSpecs;
+        public int benchmarkId;
     }
 
 }

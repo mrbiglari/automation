@@ -112,7 +112,7 @@ namespace Synthesizer
             var programSpecs = new List<List<List<object>>>();
             while (true)
             {
-                grammar.Decide(root, new Lemmas(), context, grammar);
+                grammar.Decide(root, new Lemmas(), context, grammar, null);
                 if (root.IsConcrete)
                 {
                     root.Visualize();
