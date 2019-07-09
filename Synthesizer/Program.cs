@@ -41,7 +41,7 @@ namespace Synthesis
             foreach (var node in result.Skip(1))
             {
                 rule = grammarGround.productions.Where(x => x.component == node.name).First();
-                var temp = grammarGround.DFS(rootOfUnSATCoreProgram, x => x.index == node.index.ToInt());
+                var temp = grammarGround.DFS(rootOfUnSATCoreProgram, x => x.index == node.index.ToInt()).Pop();
                 temp.FillHole(rule.component, rule, context, grammarGround);
             }
 
@@ -61,7 +61,7 @@ namespace Synthesis
             foreach (var clause in unSATCore)
             {
                 //var rule = programRoot.GetAtIndex(Int32.Parse(clause.index)).rule;
-                var rule = grammar.DFS(root, (x) => x.index == Int32.Parse(clause.index)).rule;
+                var rule = grammar.DFS(root, (x) => x.index == Int32.Parse(clause.index)).Pop().rule;
                 var componentsToCheck = grammar.productions.Where(x => x.leftHandSide == rule.leftHandSide)
                     .Select(x => x.rightHandSide.First()).ToList();
 
@@ -143,7 +143,6 @@ namespace Synthesis
 
         public TreeNode<string> Synthesize(int demand, Params param, Context context, SynthesisParams synthesisParams)
         {
-            var z3ComponentsSpecs = new List<Z3ComponentSpecs>();
 
             lemmaCreationTimes = new List<long>();
             pruningTimes = new List<long>();
@@ -154,13 +153,19 @@ namespace Synthesis
             while (true)
             {
                 //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                currentNode = synthesisParams.grammar.Decide_AST(root, unSATCorePrograms, context, synthesisParams.grammar, z3ComponentsSpecs, synthesisParams.programSpec, lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
+                 currentNode = synthesisParams.grammar.Decide_AST(root, ref unSATCorePrograms, context, synthesisParams.grammar,
+                    synthesisParams.z3ComponentSpecs, synthesisParams.programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, 
+                    ref pruningTimes, param);
                 root.Visualize();
-                synthesisParams.grammar.Propogate(root, lemmas, context, synthesisParams.grammar);
+                //synthesisParams.grammar.Propogate(root, lemmas, context, synthesisParams.grammar);
 
-                var unSATCore = CheckConflict(z3ComponentsSpecs, context, synthesisParams.programSpec, root, synthesisParams.grammar);
+                var unSATCore = CheckConflict(synthesisParams.z3ComponentSpecs, context, synthesisParams.programSpec, root, synthesisParams.grammar);
 
-                if (unSATCore?.Count != 0)
+                if (unSATCore?.Count == 1)
+                {
+                    ;
+                }
+                    if (unSATCore?.Count != 0)
                 {
                     var stopWatch = new Stopwatch();
                     var elapsedTime_Base = default(long);
@@ -171,7 +176,7 @@ namespace Synthesis
                         stopWatch.Start();
 
                         //creating lemma from UnSATCore
-                        var lemma = AnalyzeConflict(unSATCore, z3ComponentsSpecs, context, root, synthesisParams.grammar);
+                        var lemma = AnalyzeConflict(unSATCore, synthesisParams.z3ComponentSpecs, context, root, synthesisParams.grammar);
                         lemmas.Add(lemma);
 
                         stopWatch.Stop();
@@ -209,6 +214,14 @@ namespace Synthesis
                         var program_as_string = SAT_Encode(root, context);
                         if (!program_as_string.Equals(synthesisParams.programSpec.program))
                         {
+
+                            if(param.use_base_lemmas)
+                            {
+                                var lemma = Lemma.NewLemma(root, context);
+
+                                lemmas.Add(lemma);
+                            }
+
                             root = new TreeNode<string>();
                             synthesisParams.grammar = GrammarBuilder.Build(Resources.path_grammarSpec, synthesisParams.typeSpecs, random, synthesisParams.programSpec.parameters);
                             continue;
@@ -225,6 +238,7 @@ namespace Synthesis
             }
 
         }
+
 
         public void Synthesize_WhileTrue(Params param)
         {
@@ -289,12 +303,10 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-
-            var param = new Params() { use_base_lemmas = true, find_groundTruth = false };
+            var param = new Params() { use_base_lemmas = true, find_groundTruth = true };
             
             var rand = new Random(2);
             var program = new Program(rand);
-
 
             Console.WriteLine("Enter options below:");
             Console.WriteLine("1- Syntheisze from benchmarks");

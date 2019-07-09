@@ -17,6 +17,7 @@ namespace CSharpTree
         public int arity;
         public Production rule;
         public Stack<string> holes;
+        public List<string> deadends;
         public Stack<string> holesBackTrack;
         public BoolExpr expression;
         private int rootLevel;
@@ -62,9 +63,6 @@ namespace CSharpTree
                     return 1;
                 else
                 {
-                    var t1 = Children.Where(x => !x.IsLeaf).ToList();
-                    var t2 = t1.Select(x => x.Size).ToList();
-                    var t3 = t2.Sum();
                     return (Children.Where(x => !x.IsLeaf).Select(x => x.Size)).Sum() + 1;
                 }
                     
@@ -96,6 +94,7 @@ namespace CSharpTree
             this.Children = new List<TreeNode<T>>();     
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
+            this.deadends = new List<string>();
         }
         public TreeNode(int rootLevel = 1)
         {
@@ -103,6 +102,7 @@ namespace CSharpTree
             this.rootLevel = rootLevel;
             this.ElementsIndex = new LinkedList<TreeNode<T>>();
             this.ElementsIndex.Add(this);
+            this.deadends = new List<string>();
         }
 
         public TreeNode<T> GetAtIndex(int index)

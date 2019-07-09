@@ -47,6 +47,12 @@ namespace Synthesis
         public Lemma(IEnumerable<LemmaClause> lemmaClauses) : base(lemmaClauses)
         {
         }
+        public static Lemma NewLemma(TreeNode<string> root, Context context)
+        {
+            var lemmaClauses = SATEncoder<string>.satEncode(root, context)
+                                    .Select(x => new LemmaClause(new List<BoolExpr>() { context.MkNot(x) }));
+            return new Lemma(lemmaClauses);
+        }
         public BoolExpr AsExpression(Context context)
         {
             var expressions = this.Select(x => x.AsAnd(context));

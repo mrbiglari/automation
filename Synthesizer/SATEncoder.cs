@@ -176,6 +176,19 @@ namespace Synthesis
                 return expressions.First();
         }
 
+        public static BoolExpr SATEncode_Neg(TreeNode<T> node, Context context)
+        {
+
+            var expressions = satEncode(node, context);
+            expressions.Select(x => context.MkNot(x));
+            if (expressions.Any(x => x == null))
+                ;
+            if (expressions.Count > 1)
+                return context.MkAnd(expressions);
+            else
+                return expressions.First();
+        }
+
         public static List<BoolExpr> satEncode(TreeNode<T> node, Context context, List<BoolExpr> satEncoding = null)
         {
             if (satEncoding == null)

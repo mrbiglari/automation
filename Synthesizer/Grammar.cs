@@ -119,17 +119,20 @@ namespace Synthesis
             return currentNode;
         }
 
-        public TreeNode<string> DFS(TreeNode<string> root, Func<TreeNode<string>, bool> predicate)
+        public Stack<TreeNode<string>> DFS(TreeNode<string> root, Func<TreeNode<string>, bool> predicate)
         {
             var stack = new Stack<TreeNode<string>>();
+            var returnStack = new Stack<TreeNode<string>>();
             stack.Push(root);
 
             while (stack.Count() != 0)
             {
                 var current = stack.Pop();
+                returnStack.Push(current);
+
                 if (predicate(current))
                 {
-                    return current;
+                    return returnStack;
                 }
                 else
                 {
@@ -137,12 +140,12 @@ namespace Synthesis
                         stack.Push(current.Children[i]);
                 }
             }
-            throw new ArgumentException("no holes found");
+            throw new ArgumentException("no node found for the given predicate");
         }
 
         public TreeNode<string> Decide_AST(TreeNode<string> root, Lemmas lemmas, Context context, Grammar grammar, Params param)
         {
-            var hole = DFS(root, (x) => x.IsHole);
+            var hole = DFS(root, (x) => x.IsHole).Peek();
 
             var condition = root.holes == null;
             var currentLeftHandSide = condition ? grammar.startSymbol : hole.Parent.holes.Pop();
@@ -195,29 +198,42 @@ namespace Synthesis
             return null;
         }
 
-        public TreeNode<string> Decide_AST(TreeNode<string> root, List<TreeNode<string>> unSATCorePrograms, Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec, Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param)
+        public TreeNode<string> Decide_AST(TreeNode<string> root, ref List<TreeNode<string>> unSATCorePrograms,
+            Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec,
+            ref Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param)
         {
-            var hole = DFS(root, (x) => x.IsHole);
+            var searchStack = DFS(root, (x) => x.IsHole);
+            var hole = searchStack.Pop();
+
+            string currentLeftHandSide;
 
             var condition = root.holes == null;
-            var currentLeftHandSide = condition ? grammar.startSymbol : hole.Parent.holes.Pop();
-
-            if (!condition)
+            if (condition)
+            {
+                currentLeftHandSide = grammar.startSymbol;
+            }
+            else
+            {
+                currentLeftHandSide = hole.Parent.holes.Pop();
                 hole.Parent.holesBackTrack.Push(currentLeftHandSide);
+            }
 
-            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide &&
+                !hole.deadends.Any(y => y == x.rightHandSide.First())).ToList();
+
+            var holeToFill = new TreeNode<string>();
 
             while (possibleProductionRules.Count > 0)
             {
                 var index = rand.Next(0, (possibleProductionRules.Count()));
                 //var index = 0;
                 //var index = 1;
-                var choosenProductionRule = possibleProductionRules.ElementAt(index);
-                //var choosenProductionRule = possibleProductionRules.First();
+                //var choosenProductionRule = possibleProductionRules.ElementAt(index);
+                var choosenProductionRule = possibleProductionRules.First();
 
                 var terminal = choosenProductionRule.rightHandSide.First();
 
-                var holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
+                holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
 
                 holeToFill.FillHole(terminal, choosenProductionRule, context, grammar);
 
@@ -252,7 +268,7 @@ namespace Synthesis
                         }
 
                         stopWatch.Stop();
-                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;                        
+                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;
                         stopWatch.Reset();
                     }
                     #endregion
@@ -292,9 +308,9 @@ namespace Synthesis
                     }
                     #endregion
 
-                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;                    
+                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;
                     //Console.WriteLine($"Extension/Lemma ratio:{ratio}");
-                    
+
                     pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
                 }
@@ -304,19 +320,32 @@ namespace Synthesis
                     {
                         productions.Remove(holeToFill.rule);
                     }
-                    return hole;
-                }
-                if(holeToFill.IsHole && possibleProductionRules.Count == 0)
-                {
-                    holeToFill = holeToFill.Parent;
-                    grammar.productions.Add(holeToFill.rule);
-                    holeToFill.MakeHole();
-                    currentLeftHandSide = holeToFill.Parent.holesBackTrack.Peek();
-                    possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
-                    //holeToFill.Parent.holesBackTrack.Push(holeToFill.Parent.holesBackTrack.Pop());
+                    return holeToFill;
                 }
             }
-            return null;
+
+            holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
+
+            holeToFill = searchStack.Pop();
+
+            holeToFill.deadends.Add(holeToFill.Data);
+
+            if (param.use_base_lemmas)
+            {
+                var lemma = Lemma.NewLemma(root, context);
+                lemmas.Add(lemma);
+            }
+
+            grammar.productions.Add(holeToFill.rule);
+
+            holeToFill.MakeHole();
+
+            //currentLeftHandSide = holeToFill.Parent.holesBackTrack.Peek();
+
+            holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
+            return Decide_AST(root, ref unSATCorePrograms, context, grammar, z3ComponentsSpecs,
+                programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
+
         }
 
         public bool RuleResultsInLeaf(Grammar grammar, Production rule)
