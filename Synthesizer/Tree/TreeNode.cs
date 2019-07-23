@@ -65,9 +65,25 @@ namespace CSharpTree
                 {
                     return (Children.Where(x => !x.IsLeaf).Select(x => x.Size)).Sum() + 1;
                 }
-                    
+
             }
         }
+  
+        public int LOC
+        {
+            get
+            {
+                if (IsLeaf)
+                    return 1;
+                else
+                {
+                    var countLines = 1 + Children.Select(x => x.LOC).Sum();
+                    return countLines;
+                }
+                
+            }
+        }
+
         public bool ContainsHoles()
         {
             var isHole = IsHole;

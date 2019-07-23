@@ -230,7 +230,8 @@ namespace Synthesis
 
                     var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{synthesisParams.benchmarkId}.xml");
                     Console.WriteLine($"\nConcrete progam found for benchmark {benchmark_Id}:");
-                    root.Visualize();                    
+                    root.Visualize();
+                    var s = root.LOC;
                     Console.WriteLine($"####################################### ");                      
 
                     return root;
@@ -303,7 +304,7 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var param = new Params() { use_base_lemmas = true, find_groundTruth = true };
+            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = true, find_groundTruth = false, random = true };
             
             var rand = new Random(2);
             var program = new Program(rand);
@@ -334,6 +335,7 @@ namespace Synthesis
         public bool use_base_lemmas = false;
         public bool find_groundTruth = false;
         public bool debug = false;
+        public bool random = false;
     }
 
     public class SynthesisParams

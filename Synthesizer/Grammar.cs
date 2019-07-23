@@ -225,11 +225,13 @@ namespace Synthesis
 
             while (possibleProductionRules.Count > 0)
             {
-                var index = rand.Next(0, (possibleProductionRules.Count()));
-                //var index = 0;
-                //var index = 1;
-                //var choosenProductionRule = possibleProductionRules.ElementAt(index);
-                var choosenProductionRule = possibleProductionRules.First();
+                int index;
+                if(param.random)
+                     index = rand.Next(0, (possibleProductionRules.Count()));
+                else
+                     index = 0;
+                
+                var choosenProductionRule = possibleProductionRules.ElementAt(index);
 
                 var terminal = choosenProductionRule.rightHandSide.First();
 
@@ -323,6 +325,7 @@ namespace Synthesis
                     return holeToFill;
                 }
             }
+
 
             holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
 

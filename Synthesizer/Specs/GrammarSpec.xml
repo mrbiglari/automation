@@ -13,7 +13,7 @@
   </types>
   <production>
     <rule>
-      N --> sum L
+      N --> head L, last L, access L M, sum L, count L T M,  maximum L, minimum L
     </rule>
     <rule>
       L --> list(x), [1'2'3], take L M, drop L M, sort L, reverse L, filter L T M, map L F M, zipWith L L Z, scanl1 L Z
