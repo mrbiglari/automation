@@ -35,7 +35,6 @@ namespace Synthesizer
                     {
                         if (node.Data.Contains("["))
                         {
-                            var s = node.Data.Remove(new string[] { "[", "]" }).SplitBy("'").Select(x => Int32.Parse(x)).ToList();
                             return node.Data.Remove(new string[] { "[", "]" }).SplitBy("'").Select(x => Int32.Parse(x)).ToList();
                         }
 

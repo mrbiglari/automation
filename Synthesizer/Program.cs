@@ -124,6 +124,13 @@ namespace Synthesis
 
             return root;
         }
+        public TreeNode<string> BackTrack2(UnSatCore unSATCore, Grammar grammar, TreeNode<string> currentNode, TreeNode<string> root)
+        {
+            currentNode.Parent.holes.Push(currentNode.Parent.holesBackTrack.Pop());
+            currentNode.MakeHole();            
+
+            return root;
+        }
 
         public static string SAT_Encode(TreeNode<string> root, Context context)
         {
@@ -140,10 +147,8 @@ namespace Synthesis
             unSATCorePrograms = new List<TreeNode<string>>();
         }
 
-
         public TreeNode<string> Synthesize(int demand, Params param, Context context, SynthesisParams synthesisParams)
         {
-
             lemmaCreationTimes = new List<long>();
             pruningTimes = new List<long>();
             var root = new TreeNode<string>();
@@ -201,29 +206,35 @@ namespace Synthesis
 
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
-                    root = BackTrack(unSATCore, synthesisParams.grammar, currentNode, root);
+                    root = BackTrack2(unSATCore, synthesisParams.grammar, currentNode, root);
                 }
 
-                if (lemmas.IsUnSAT(context))
-                    return null;
+                //if (lemmas.IsUnSAT(context))
+                //    return null;
 
                 else if (root.IsConcrete)
                 {
                     if (param.find_groundTruth)
                     {
                         var program_as_string = SAT_Encode(root, context);
-                        if (!program_as_string.Equals(synthesisParams.programSpec.program))
+                        //var check = AreEqual_Concrete(program_as_string, synthesisParams.programSpec.program);
+                        var check = AreEqual_Examples(synthesisParams.programSpec, root);
+                        if (!check)
                         {
-
                             if(param.use_base_lemmas)
                             {
                                 var lemma = Lemma.NewLemma(root, context);
 
-                                lemmas.Add(lemma);
+                                var count = lemmas.Where(x => x.AsExpression(context) == lemma.AsExpression(context)).Count();
+                                if(count == 0)
+                                {
+                                    lemmas.Add(lemma);
+                                }                                
                             }
 
-                            root = new TreeNode<string>();
-                            synthesisParams.grammar = GrammarBuilder.Build(Resources.path_grammarSpec, synthesisParams.typeSpecs, random, synthesisParams.programSpec.parameters);
+                            root = BackTrack(unSATCore, synthesisParams.grammar, currentNode, root);
+                            //root = new TreeNode<string>();
+                            //synthesisParams.grammar = GrammarBuilder.Build(Resources.path_grammarSpec, synthesisParams.typeSpecs, random, synthesisParams.programSpec.parameters);
                             continue;
                         }
                     }
@@ -237,9 +248,50 @@ namespace Synthesis
                     return root;
                 }
             }
-
+            
+        }
+        public bool AreEqual_Concrete(string program_as_string, string program)
+        {
+            return program_as_string.Equals(program);
         }
 
+        public bool AreEqual(Parameter parameter, object obj)
+        {
+            if(parameter.argType == ArgType.Int)
+            {
+                return (int)parameter.obj == (int)obj;
+            }
+            else if (parameter.argType == ArgType.List)
+            {
+                return ((List<int>)parameter.obj).First() == (int)obj;
+            }
+                return false;
+        }
+
+        public bool AreEqual_Examples(ProgramSpec programSpec, TreeNode<string> root)
+        {
+            var runner = new ProgramRunner();
+            foreach(var concreteExample in programSpec.concreteExamples)
+            {
+                var inputArgs = concreteExample.Where(x => x.parameterType == ParameterType.Input).
+                    Select(x => x.obj).ToArray();
+                var outputArg = concreteExample.Single(x => x.parameterType == ParameterType.Output);
+                try
+                {
+                    var outputResult = runner.ExecuteProgram(root, inputArgs);
+                    var check = AreEqual(outputArg, outputResult);
+                    if (check)
+                        ;
+                    return check;
+                }
+                catch(Exception ex)
+                {
+                    return false;
+                }
+                
+            }            
+            return false;
+        }
 
         public void Synthesize_WhileTrue(Params param)
         {
@@ -304,7 +356,7 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = true, find_groundTruth = false, random = true };
+            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = false, find_groundTruth = false, random = true };
             
             var rand = new Random(2);
             var program = new Program(rand);

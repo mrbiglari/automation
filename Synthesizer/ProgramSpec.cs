@@ -10,16 +10,18 @@ namespace Synthesis
     public class ProgramSpec
     {
         public List<Example> examples;
+        public List<List<Parameter>> concreteExamples;
         public List<Arg> args;
         public List<Parameter> parameters;
         public string program;
 
-        public ProgramSpec(List<Example> examples, List<Arg> args, List<Parameter> parameters, string program)
+        public ProgramSpec(List<Example> examples, List<Arg> args, List<Parameter> parameters, string program, List<List<Parameter>> concreteExamples)
         {
             this.examples = examples;
             this.args = args;
             this.parameters = parameters;
             this.program = program;
+            this.concreteExamples = concreteExamples;
         }
     }
 
@@ -112,6 +114,27 @@ namespace Synthesis
         public string specAsString;
 
         public Example(List<Parameter> parameters, List<TypeSpec> argSpecList, Context context)
+        {
+            this.parameters = new List<Parameter>();
+
+            var argSpec = argSpecList.Where(x => x.type == ArgType.List).First();
+
+            foreach (var parameter in parameters)
+            {
+                var param = ProgramSpecBuilder.GetParamByType(parameter, argSpec);
+
+                this.parameters.Add(param);
+            }
+        }
+    }
+    public class ConcreteExample
+    {
+        public List<Parameter> parameters;
+
+        public BoolExpr spec;
+        public string specAsString;
+
+        public ConcreteExample(List<Parameter> parameters, List<TypeSpec> argSpecList, Context context)
         {
             this.parameters = new List<Parameter>();
 

@@ -145,6 +145,7 @@ namespace Synthesis
                 }).ToList();
 
             var examples = new List<Example>();
+            var concreteExamples = new List<List<Parameter>>();
 
             foreach (var componentSpec in programSpecsList)
             {
@@ -154,11 +155,28 @@ namespace Synthesis
 
                 var outputSplittedList = componentSpec[ParameterType.Output].SplitBy(Symbols.argSeperator).Select((x, index) => Tuple.Create(index + 1, x)).ToList();
                 UpdateParametersList(outputSplittedList, ParameterType.Output);
+                ;
+
+
+                var concreteExample = parameterList.Select((x) =>
+                {
+                    if (x.argType == ArgType.Int)
+                    {
+                        return new Parameter(x.parameterType, x.argType, (object)Int32.Parse(x.obj.ToString()), x.index);
+                    }
+                    else if (x.argType == ArgType.List)
+                    {
+                        return new Parameter(x.parameterType, x.argType, x.obj.ToString().SplitBy("'").Select(y => Int32.Parse(y)).ToList(), x.index);
+                    }
+                    return null;
+                }).ToList();
 
                 examples.Add(new Example(parameterList, typeSpecs, context));
+
+                concreteExamples.Add(concreteExample);
             }
 
-            return new ProgramSpec(examples, argTypesList, parameters, program);
+            return new ProgramSpec(examples, argTypesList, parameters, program, concreteExamples);
         }
 
         public static void UpdateParametersList(List<Tuple<int, string>> parameters, ParameterType parameterType)

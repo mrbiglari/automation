@@ -128,7 +128,7 @@ namespace Synthesizer
                             {
                                 var result = CreateRandomParamsAndExecuteProgram(root, random, parameters);
                                 programSpec.Add(result);
-                                if (programSpec.Count == 5)
+                                if (programSpec.Count == 50)
                                 {
                                     programSpecs.Add(programSpec);
                                     WriteBenchmark(root, programSpec, parameters, context);

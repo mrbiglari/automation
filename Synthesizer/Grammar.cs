@@ -207,13 +207,15 @@ namespace Synthesis
 
             string currentLeftHandSide;
 
-            var condition = root.holes == null;
+            var condition = (hole.holes == null || hole.holes.Count == 0) && hole.IsRoot;
             if (condition)
             {
                 currentLeftHandSide = grammar.startSymbol;
             }
             else
             {
+                if (hole.Parent.holes.Count() == 0)
+                    ;
                 currentLeftHandSide = hole.Parent.holes.Pop();
                 hole.Parent.holesBackTrack.Push(currentLeftHandSide);
             }
@@ -222,7 +224,10 @@ namespace Synthesis
                 !hole.deadends.Any(y => y == x.rightHandSide.First())).ToList();
 
             var holeToFill = new TreeNode<string>();
+            if (possibleProductionRules.Count == 0)
+                ;
 
+            holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
             while (possibleProductionRules.Count > 0)
             {
                 int index;
@@ -235,12 +240,12 @@ namespace Synthesis
 
                 var terminal = choosenProductionRule.rightHandSide.First();
 
-                holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
+                //holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
 
                 holeToFill.FillHole(terminal, choosenProductionRule, context, grammar);
 
-                if (RuleResultsInLeaf(grammar, choosenProductionRule))
-                {
+                //if (RuleResultsInLeaf(grammar, choosenProductionRule))
+                //{
                     var stopWatch = new Stopwatch();
                     var elapsedTime_Base = default(long);
                     var elapsedTime_Extension = default(long);
@@ -252,11 +257,15 @@ namespace Synthesis
                         //Reject current partial program using Lemmas
                         var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
 
-                        foreach (var lemma in lemmas)
-                        {
+                        var lemmasAsExp = lemmas.Select(x => x.AsExpression(context)).ToList();
+                        var lemmasAsConj = context.MkAnd(lemmasAsExp);
+
+                        //foreach (var lemma in lemmas)
+                        //{
                             //checking consistency with the knoweldge base (Lemmas)
-                            var lemmaAsExpersion = lemma.AsExpression(context);
-                            var check = context.MkAnd(lemmaAsExpersion, satEncodedProgram);
+                            //var lemmaAsExpersion = lemma.AsExpression(context);
+
+                            var check = context.MkAnd(lemmasAsConj, satEncodedProgram);
                             var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
 
                             if (checkIfUnSAT)
@@ -265,9 +274,9 @@ namespace Synthesis
                                 possibleProductionRules.Remove(choosenProductionRule);
                                 lemmaCounter++;
                                 extensionCounter++;
-                                break;
+                                //break;
                             }
-                        }
+                        //}
 
                         stopWatch.Stop();
                         elapsedTime_Base = stopWatch.ElapsedMilliseconds;
@@ -301,7 +310,7 @@ namespace Synthesis
                                 holeToFill.MakeHole();
                                 possibleProductionRules.Remove(choosenProductionRule);
                                 extensionCounter++;
-                                break;
+                                //break;
                             }
                         }
                         stopWatch.Stop();
@@ -315,7 +324,7 @@ namespace Synthesis
 
                     pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
-                }
+                //}
                 if (!holeToFill.IsHole)
                 {
                     if (!RuleResultsInLeaf(grammar, holeToFill.rule))
@@ -326,7 +335,14 @@ namespace Synthesis
                 }
             }
 
+            root.Visualize();
+            if (root.Data == null)
+                ;
 
+            if(holeToFill.Parent.holesBackTrack.Count() ==0)
+            {
+                ;
+            }
             holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
 
             holeToFill = searchStack.Pop();
@@ -336,11 +352,16 @@ namespace Synthesis
             if (param.use_base_lemmas)
             {
                 var lemma = Lemma.NewLemma(root, context);
-                lemmas.Add(lemma);
+                var count = lemmas.Where(x => x.AsExpression(context) == lemma.AsExpression(context)).Count();
+                if (count == 0)
+                    lemmas.Add(lemma);
+
             }
 
-            grammar.productions.Add(holeToFill.rule);
-
+            if (!RuleResultsInLeaf(grammar, holeToFill.rule))
+            {
+                grammar.productions.Add(holeToFill.rule);
+            }
             holeToFill.MakeHole();
 
             //currentLeftHandSide = holeToFill.Parent.holesBackTrack.Peek();

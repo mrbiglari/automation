@@ -40,7 +40,7 @@ namespace Synthesizer
         {
             if (list.Count < n)
                 throw new ArgumentException("index out of range");
-            return list[n+1];
+            return list[n];
         }
 
         public static int minimum(List<int> list)
@@ -158,7 +158,7 @@ namespace Synthesizer
 
             for (int i = 1; i < list.Count; i++)
             {
-                newList[i] = map_IntPairs_To_Int(newList[i - 1], list[i]);
+                newList.Add(map_IntPairs_To_Int(newList[i - 1], list[i]));
             }
             return newList;
         }
