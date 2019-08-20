@@ -1,9 +1,11 @@
 ﻿using Microsoft.Z3;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,6 +13,13 @@ namespace Synthesis
 {
     public static class EnumHelper
     {
+
+        public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
+        {
+            return listToClone.Select(item => (T)item.Clone()).ToList();
+        }
+
+
         public static T GetEnumValue<T>(string term)
         {
             foreach (T argType in Enum.GetValues(typeof(T)))
@@ -27,7 +36,7 @@ namespace Synthesis
             {
                 return (T)Enum.Parse(typeof(T), value, true);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return default(T);
             }
@@ -53,7 +62,7 @@ namespace Synthesis
 
         public static string Remove(this string myString, string[] terms)
         {
-            terms.Length.Times((i)=>
+            terms.Length.Times((i) =>
             {
                 myString = myString.Replace(terms[i], "");
             });
@@ -67,7 +76,7 @@ namespace Synthesis
 
         public static UnSatCores AsUnSATCores(this List<UnSatCore> list)
         {
-            return new UnSatCores (list);
+            return new UnSatCores(list);
         }
 
         public static Lemmas AsLemmas(this IEnumerable<Lemma> list)
@@ -101,6 +110,17 @@ namespace Synthesis
             }
         }
 
+        public static T DeepClone<T>(T obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+
+                return (T)formatter.Deserialize(ms);
+            }
+        }
 
         public static List<T> Clone<T>(this List<T> listToClone) where T : ICloneable
         {

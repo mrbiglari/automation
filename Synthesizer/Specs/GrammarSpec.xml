@@ -13,22 +13,22 @@
   </types>
   <production>
     <rule>
-      N --> head L, last L, access L M, sum L, count L T M,  maximum L, minimum L
+      N --> sum L
     </rule>
     <rule>
       L --> list(x), [1'2'3], take L M, drop L M, sort L, reverse L, filter L T M, map L F M, zipWith L L Z, scanl1 L Z
     </rule>
     <rule>
-      M --> int(x), 1, 2, 3
+      M --> int(x), 1
     </rule>
     <rule>
-      T --> leq, gteq, eq, modeq, modneq
+      T --> leq
     </rule>
     <rule>
-      F --> mul, div, plus, minus, pow
+      F --> mul
     </rule>
     <rule>
-      Z --> plus, minus, mul, min, max
+      Z --> plus
     </rule>
   </production>
 </grammar>

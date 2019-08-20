@@ -93,7 +93,7 @@ namespace Synthesis
             return lemma;
         }
 
-        public TreeNode<string> BackTrack(UnSatCore unSATCore, Grammar grammar, TreeNode<string> currentNode, TreeNode<string> root)
+        public TreeNode<string> BackTrack_Non_Chronological(UnSatCore unSATCore, Grammar grammar, TreeNode<string> currentNode, TreeNode<string> root)
         {
             int index = 0;
             while (unSATCore.First().index.ToInt() != currentNode.index)
@@ -124,10 +124,10 @@ namespace Synthesis
 
             return root;
         }
-        public TreeNode<string> BackTrack2(UnSatCore unSATCore, Grammar grammar, TreeNode<string> currentNode, TreeNode<string> root)
+        public TreeNode<string> BackTrack_Chronological(UnSatCore unSATCore, Grammar grammar, TreeNode<string> currentNode, TreeNode<string> root)
         {
             currentNode.Parent.holes.Push(currentNode.Parent.holesBackTrack.Pop());
-            currentNode.MakeHole();            
+            currentNode.MakeHole();
 
             return root;
         }
@@ -136,6 +136,14 @@ namespace Synthesis
         {
             var sat_encoded_program = SATEncoder<string>.SATEncode(root, context);
             var sat_encoded_pogram_as_string = sat_encoded_program.Args.ToList().Select(x => x.ToString()).OrderBy(x => Int32.Parse(x.SplitBy("_").ElementAt(1))).ToList();
+            var sat_encoded_pogram_as_string1 = sat_encoded_program.Args.ToList().Select(x => x.ToString()).ToList();
+            return String.Join(" ", sat_encoded_pogram_as_string);
+        }
+
+        public static string SAT_Encode_NoOrder(TreeNode<string> root, Context context)
+        {
+            var sat_encoded_program = SATEncoder<string>.SATEncode(root, context);
+            var sat_encoded_pogram_as_string = sat_encoded_program.Args.ToList().Select(x => x.ToString()).ToList();
             return String.Join(" ", sat_encoded_pogram_as_string);
         }
 
@@ -158,10 +166,12 @@ namespace Synthesis
             while (true)
             {
                 //currentNode = grammar.Decide(root, lemmas, context, grammar);
-                 currentNode = synthesisParams.grammar.Decide_AST(root, ref unSATCorePrograms, context, synthesisParams.grammar,
-                    synthesisParams.z3ComponentSpecs, synthesisParams.programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, 
-                    ref pruningTimes, param);
+                currentNode = synthesisParams.grammar.Decide_AST(root, ref unSATCorePrograms, context, synthesisParams.grammar,
+                   synthesisParams.z3ComponentSpecs, synthesisParams.programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter,
+                   ref pruningTimes, param);
                 root.Visualize();
+
+                //File.AppendAllText(Resources.path_results, root.ToString());
                 //synthesisParams.grammar.Propogate(root, lemmas, context, synthesisParams.grammar);
 
                 var unSATCore = CheckConflict(synthesisParams.z3ComponentSpecs, context, synthesisParams.programSpec, root, synthesisParams.grammar);
@@ -170,43 +180,60 @@ namespace Synthesis
                 {
                     ;
                 }
-                    if (unSATCore?.Count != 0)
+                if (unSATCore?.Count != 0)
                 {
                     var stopWatch = new Stopwatch();
                     var elapsedTime_Base = default(long);
                     var elapsedTime_Extension = default(long);
 
-                    if (param.use_base_lemmas)
+                    if (unSATCore.First().name != root.Data)
                     {
-                        stopWatch.Start();
+                        var lemma = Lemma.NewLemma(root, context);
+                        var lemmaAsString = synthesisParams.grammar.CheckLemma_ByString(lemma);
 
-                        //creating lemma from UnSATCore
-                        var lemma = AnalyzeConflict(unSATCore, synthesisParams.z3ComponentSpecs, context, root, synthesisParams.grammar);
+                        lemmas.RemoveAll(x => synthesisParams.grammar.CheckLemma_ByString(x).Contains(lemmaAsString));
                         lemmas.Add(lemma);
-
-                        stopWatch.Stop();
-                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                        stopWatch.Reset();
                     }
-
-                    if (param.use_extended_lemmas)
+                    else
                     {
-                        stopWatch.Start();
+                        if (param.use_base_lemmas && !param.use_extended_lemmas)
+                        {
+                            stopWatch.Start();
 
-                        //creating unSAT Programs from UnSATCore
-                        var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, synthesisParams.grammarGround, context);
-                        unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                            //creating lemma from UnSATCore
+                            var lemma = AnalyzeConflict(unSATCore, synthesisParams.z3ComponentSpecs, context, root, synthesisParams.grammar);
 
-                        stopWatch.Stop();
-                        elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+
+
+                            //lemmas.RemoveAll(x => synthesisParams.grammar.CheckLemma(lemma, x, context));
+                            lemmas.Add(lemma);
+
+                            stopWatch.Stop();
+                            elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                            stopWatch.Reset();
+                        }
+
+                        if (param.use_extended_lemmas)
+                        {
+                            stopWatch.Start();
+
+                            //creating unSAT Programs from UnSATCore
+                            var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, synthesisParams.grammarGround, context);
+                            unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+
+                            stopWatch.Stop();
+                            elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                        }
                     }
-
                     if (elapsedTime_Base != 0 && elapsedTime_Extension != 0)
                         lemmaCreationTimes.Add(elapsedTime_Base - elapsedTime_Extension);
 
                     //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
 
-                    root = BackTrack2(unSATCore, synthesisParams.grammar, currentNode, root);
+                    if (param.find_groundTruth)
+                        root = BackTrack_Chronological(unSATCore, synthesisParams.grammar, currentNode, root);
+                    else
+                        root = BackTrack_Non_Chronological(unSATCore, synthesisParams.grammar, currentNode, root);
                 }
 
                 //if (lemmas.IsUnSAT(context))
@@ -221,20 +248,18 @@ namespace Synthesis
                         var check = AreEqual_Examples(synthesisParams.programSpec, root);
                         if (!check)
                         {
-                            if(param.use_base_lemmas)
+                            if (param.use_base_lemmas)
                             {
                                 var lemma = Lemma.NewLemma(root, context);
 
                                 var count = lemmas.Where(x => x.AsExpression(context) == lemma.AsExpression(context)).Count();
-                                if(count == 0)
+                                if (count == 0)
                                 {
                                     lemmas.Add(lemma);
-                                }                                
+                                }
                             }
 
-                            root = BackTrack(unSATCore, synthesisParams.grammar, currentNode, root);
-                            //root = new TreeNode<string>();
-                            //synthesisParams.grammar = GrammarBuilder.Build(Resources.path_grammarSpec, synthesisParams.typeSpecs, random, synthesisParams.programSpec.parameters);
+                            root = BackTrack_Chronological(unSATCore, synthesisParams.grammar, currentNode, root);
                             continue;
                         }
                     }
@@ -242,13 +267,12 @@ namespace Synthesis
                     var benchmark_Id = Resources.path_programSpec.Replace(".xml", $"{synthesisParams.benchmarkId}.xml");
                     Console.WriteLine($"\nConcrete progam found for benchmark {benchmark_Id}:");
                     root.Visualize();
-                    var s = root.LOC;
-                    Console.WriteLine($"####################################### ");                      
+                    Console.WriteLine($"####################################### ");
 
                     return root;
                 }
             }
-            
+
         }
         public bool AreEqual_Concrete(string program_as_string, string program)
         {
@@ -257,7 +281,7 @@ namespace Synthesis
 
         public bool AreEqual(Parameter parameter, object obj)
         {
-            if(parameter.argType == ArgType.Int)
+            if (parameter.argType == ArgType.Int)
             {
                 return (int)parameter.obj == (int)obj;
             }
@@ -265,13 +289,16 @@ namespace Synthesis
             {
                 return ((List<int>)parameter.obj).First() == (int)obj;
             }
-                return false;
+            return false;
         }
 
         public bool AreEqual_Examples(ProgramSpec programSpec, TreeNode<string> root)
         {
             var runner = new ProgramRunner();
-            foreach(var concreteExample in programSpec.concreteExamples)
+
+            var examples = Extensions.DeepClone(programSpec.concreteExamples);
+
+            foreach (var concreteExample in examples)
             {
                 var inputArgs = concreteExample.Where(x => x.parameterType == ParameterType.Input).
                     Select(x => x.obj).ToArray();
@@ -280,26 +307,25 @@ namespace Synthesis
                 {
                     var outputResult = runner.ExecuteProgram(root, inputArgs);
                     var check = AreEqual(outputArg, outputResult);
-                    if (check)
-                        ;
+
                     return check;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     return false;
                 }
-                
-            }            
+
+            }
             return false;
         }
 
         public void Synthesize_WhileTrue(Params param)
         {
             using (Context context = new Context(new Dictionary<string, string>() { { "proof", "true" } }))
-            {                
+            {
                 var benchmark_count = Directory.GetFiles(Resources.path_programSpec_base).Length;
 
-                for (int benchmark_id = 1; benchmark_id <= benchmark_count; benchmark_id++)
+                for (int benchmark_id = 56; benchmark_id <= benchmark_count; benchmark_id++)
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
@@ -311,6 +337,7 @@ namespace Synthesis
                     var grammar = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
                     var grammarGround = GrammarBuilder.Build(Resources.path_grammarSpec, typeSpecs, random, programSpec.parameters);
                     var z3ComponentsSpecs = ComponentSpecsBuilder.Build(Resources.path_componentSpec, context, programSpec, grammar);
+
 
                     var synthesisParams = new SynthesisParams()
                     {
@@ -332,13 +359,16 @@ namespace Synthesis
                     stopWatch.Stop();
                     Console.WriteLine($"Time Elapsed: {(double)stopWatch.Elapsed.TotalSeconds}");
 
-                    
+
                     if (numberOfPrograms == 1)
                     {
                         var root = roots.First();
                         string createText = $"{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {SAT_Encode(root, context)}\n";
                         if (benchmark_id == 1)
                         {
+                            //if (!Directory.Exists(Resources.path_results))
+                            //    Directory.CreateDirectory(Resources.path_results);
+
                             File.WriteAllText(Resources.path_results, String.Empty);
                             File.AppendAllText(Resources.path_results, "{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {SAT_Encode(root, context)}\n");
                         }
@@ -356,25 +386,25 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = false, find_groundTruth = false, random = true };
-            
+            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = false, find_groundTruth = true, random = false};
+
             var rand = new Random(2);
             var program = new Program(rand);
 
             Console.WriteLine("Enter options below:");
-            Console.WriteLine("1- Syntheisze from benchmarks");
-            Console.WriteLine("2- Generate benchmarks");
+            Console.WriteLine("1-  ");
+            Console.WriteLine("2-  ");
 
             var option = Console.ReadLine();
 
-            if(option == "1")
+            if (option == "1")
                 program.Synthesize_WhileTrue(param);
             else if (option == "1d")
-                {
-                    param.debug = true;
-                    program.Synthesize_WhileTrue(param);
-                }
-                    
+            {
+                param.debug = true;
+                program.Synthesize_WhileTrue(param);
+            }
+
             else if (option == "2")
                 BenchmarkFactory.CreateBenchmark(rand);
 

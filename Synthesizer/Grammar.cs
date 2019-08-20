@@ -1,8 +1,10 @@
 ﻿using CSharpTree;
 using Microsoft.Z3;
+using Synthesizer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -198,6 +200,71 @@ namespace Synthesis
             return null;
         }
 
+
+        public bool Check(TreeNode<string> root)
+        {
+            bool check = true;
+            try
+            {
+                check = root.Data == "sum";
+                var child = root.Children.First();
+                check &= child.Data == "map";
+
+                child = child.Children.First();
+                check &= child.Data == "sort";
+
+                child = child.Children.First();
+                check &= child.Data == "scanL1";
+
+                child = child.Children.First();
+                check &= child.Data == "take";
+
+                child = child.Children.First();
+                check &= child.Data == "filter";
+
+                child = child.Children.First();
+                check &= child.Data == "x1";
+            }
+            catch (Exception ex)
+            {
+                check = false;
+            }
+
+            return check;
+        }
+
+        public bool Check1(TreeNode<string> root)
+        {
+            bool check = true;
+            try
+            {
+                check = root.Data == "sum";
+                var child = root.Children.First();
+                check &= child.Data == "map";
+
+                child = child.Children.First();
+                check &= child.Data == "scanL1";
+
+                child = child.Children.First();
+                check &= child.Data == "filter";
+
+                child = child.Children.First();
+                check &= child.Data == "take";
+
+                child = child.Children.First();
+                check &= child.Data == "x1";
+
+                //child = child.Children.First();
+                //check &= child.Data == "[1'2'3]";
+            }
+            catch (Exception ex)
+            {
+                check = false;
+            }
+
+            return check;
+        }
+
         public TreeNode<string> Decide_AST(TreeNode<string> root, ref List<TreeNode<string>> unSATCorePrograms,
             Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec,
             ref Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param)
@@ -214,116 +281,115 @@ namespace Synthesis
             }
             else
             {
-                if (hole.Parent.holes.Count() == 0)
-                    ;
                 currentLeftHandSide = hole.Parent.holes.Pop();
                 hole.Parent.holesBackTrack.Push(currentLeftHandSide);
             }
 
-            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide &&
-                !hole.deadends.Any(y => y == x.rightHandSide.First())).ToList();
+            //var possibleProductionRules1 = productions.Where(x => x.leftHandSide == currentLeftHandSide &&
+            //    !hole.deadends.Any(y => y == x.rightHandSide.First())).ToList();
+            var possibleProductionRules = productions.Where(x => x.leftHandSide == currentLeftHandSide).ToList();
 
             var holeToFill = new TreeNode<string>();
-            if (possibleProductionRules.Count == 0)
-                ;
 
             holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
             while (possibleProductionRules.Count > 0)
             {
                 int index;
-                if(param.random)
-                     index = rand.Next(0, (possibleProductionRules.Count()));
+                if (param.random)
+                    index = rand.Next(0, (possibleProductionRules.Count()));
                 else
-                     index = 0;
-                
+                    index = 0;
+
                 var choosenProductionRule = possibleProductionRules.ElementAt(index);
 
                 var terminal = choosenProductionRule.rightHandSide.First();
 
-                //holeToFill = hole.IsHole ? hole : hole.Children.FirstOrDefault(x => x.IsHole);
-
                 holeToFill.FillHole(terminal, choosenProductionRule, context, grammar);
+
+                if (Check(root))
+                    ;
+
 
                 //if (RuleResultsInLeaf(grammar, choosenProductionRule))
                 //{
-                    var stopWatch = new Stopwatch();
-                    var elapsedTime_Base = default(long);
-                    var elapsedTime_Extension = default(long);
+                var stopWatch = new Stopwatch();
+                var elapsedTime_Base = default(long);
+                var elapsedTime_Extension = default(long);
 
-                    #region reject with base-lemmas
-                    if (param.use_base_lemmas)
+                #region reject with base-lemmas
+                if (param.use_base_lemmas)
+                {
+                    stopWatch.Start();
+                    //Reject current partial program using Lemmas
+                    var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
+
+                    var lemmasAsExp = lemmas.Select(x => x.AsExpression(context)).ToList();
+                    var lemmasAsConj = context.MkAnd(lemmasAsExp);
+
+                    //foreach (var lemma in lemmas)
+                    //{
+                    //checking consistency with the knoweldge base (Lemmas)
+                    //var lemmaAsExpersion = lemma.AsExpression(context);
+
+                    var check = context.MkAnd(lemmasAsConj, satEncodedProgram);
+                    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+
+                    if (checkIfUnSAT)
                     {
-                        stopWatch.Start();
-                        //Reject current partial program using Lemmas
-                        var satEncodedProgram = SATEncoder<string>.SATEncode(root, context);
-
-                        var lemmasAsExp = lemmas.Select(x => x.AsExpression(context)).ToList();
-                        var lemmasAsConj = context.MkAnd(lemmasAsExp);
-
-                        //foreach (var lemma in lemmas)
-                        //{
-                            //checking consistency with the knoweldge base (Lemmas)
-                            //var lemmaAsExpersion = lemma.AsExpression(context);
-
-                            var check = context.MkAnd(lemmasAsConj, satEncodedProgram);
-                            var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-
-                            if (checkIfUnSAT)
-                            {
-                                holeToFill.MakeHole();
-                                possibleProductionRules.Remove(choosenProductionRule);
-                                lemmaCounter++;
-                                extensionCounter++;
-                                //break;
-                            }
-                        //}
-
-                        stopWatch.Stop();
-                        elapsedTime_Base = stopWatch.ElapsedMilliseconds;
-                        stopWatch.Reset();
+                        holeToFill.MakeHole();
+                        possibleProductionRules.Remove(choosenProductionRule);
+                        lemmaCounter++;
+                        extensionCounter++;
+                        //break;
                     }
-                    #endregion
+                    //}
 
-                    #region reject with extended-lemmas
-                    if (param.use_extended_lemmas)
+                    stopWatch.Stop();
+                    elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                    stopWatch.Reset();
+                }
+                #endregion
+
+                #region reject with extended-lemmas
+                if (param.use_extended_lemmas)
+                {
+                    stopWatch.Start();
+                    //Reject current partial program using unSATPrograms
+                    foreach (var unSATCoreProgram in unSATCorePrograms)
                     {
-                        stopWatch.Start();
-                        //Reject current partial program using unSATPrograms
-                        foreach (var unSATCoreProgram in unSATCorePrograms)
+                        //checking consistency with the knoweldge base (UnSAT Programs)
+                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+
+                        var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                        var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+
+                        var program = new Program(rand);
+                        //var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
+                        //var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
+
+                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
+                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+
+                        if (checkIfUnSAT)
                         {
-                            //checking consistency with the knoweldge base (UnSAT Programs)
-                            var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                            var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
-
-                            var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                            var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-
-                            var program = new Program(rand);
-                            var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
-                            var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
-
-                            var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
-                            var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
-
-                            if (checkIfUnSAT)
-                            {
-                                holeToFill.MakeHole();
-                                possibleProductionRules.Remove(choosenProductionRule);
-                                extensionCounter++;
-                                //break;
-                            }
+                            holeToFill.MakeHole();
+                            possibleProductionRules.Remove(choosenProductionRule);
+                            extensionCounter++;
+                            //break;
                         }
-                        stopWatch.Stop();
-                        elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
-                        stopWatch.Reset();
                     }
-                    #endregion
+                    stopWatch.Stop();
+                    elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                    stopWatch.Reset();
+                }
+                #endregion
 
-                    var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;
-                    //Console.WriteLine($"Extension/Lemma ratio:{ratio}");
+                var ratio = (extensionCounter == 0 || lemmaCounter == 0) ? 1 : extensionCounter / lemmaCounter;
+                //Console.WriteLine($"Extension/Lemma ratio:{ratio}");
 
-                    pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
-                    //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
+                pruningTimes.Add(elapsedTime_Base - elapsedTime_Extension);
+                //Console.WriteLine($"{lemmas.Count == 0} {unSATCorePrograms.Count == 0} Elapsed time base - extension: {elapsedTime_Base - elapsedTime_Extension}");
                 //}
                 if (!holeToFill.IsHole)
                 {
@@ -335,23 +401,29 @@ namespace Synthesis
                 }
             }
 
-            root.Visualize();
-            if (root.Data == null)
-                ;
+            //root.Visualize();
+            //File.AppendAllText(Resources.path_results, root.ToString());
 
-            if(holeToFill.Parent.holesBackTrack.Count() ==0)
-            {
-                ;
-            }
+
+            //holeToFill.deadends.Clear();
             holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
 
             holeToFill = searchStack.Pop();
 
-            holeToFill.deadends.Add(holeToFill.Data);
+            //holeToFill.deadends.Add(holeToFill.Data);
 
             if (param.use_base_lemmas)
             {
                 var lemma = Lemma.NewLemma(root, context);
+
+                var lemmasAsExpression = lemma.AsExpression(context);
+
+
+                var lemmaAsString = CheckLemma_ByString(lemma);
+                lemmas.RemoveAll(x => CheckLemma_ByString(x).Contains(lemmaAsString));
+
+                //lemmas.RemoveAll(x => CheckLemma(lemma, x, context));
+
                 var count = lemmas.Where(x => x.AsExpression(context) == lemma.AsExpression(context)).Count();
                 if (count == 0)
                     lemmas.Add(lemma);
@@ -370,6 +442,19 @@ namespace Synthesis
             return Decide_AST(root, ref unSATCorePrograms, context, grammar, z3ComponentsSpecs,
                 programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
 
+        }
+
+        public bool CheckLemma_ByImplication(Lemma newLemma, Lemma oldLemma, Context context)
+        {
+            return SMTSolver.CheckIfUnSAT(context, context.MkNot(context.MkImplies(newLemma.AsExpression(context), oldLemma.AsExpression(context))));
+        }
+
+        public string CheckLemma_ByString(Lemma lemma)
+        {
+            var t2 = lemma.Select(x => x.Select(y => y.Args.First().ToString()).First()).ToList();
+            var temp_1 = String.Join(" ", t2);
+
+            return temp_1;
         }
 
         public bool RuleResultsInLeaf(Grammar grammar, Production rule)

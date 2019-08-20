@@ -30,7 +30,7 @@ namespace Synthesis
         Unknown = -2,
         Other = -1,
         List,
-        Int      
+        Int
     }
 
     public enum ParameterType
@@ -82,6 +82,7 @@ namespace Synthesis
         };
     }
 
+    [Serializable]
     public class Parameter
     {
         public ParameterType parameterType;
