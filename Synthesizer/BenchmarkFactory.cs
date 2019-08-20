@@ -98,14 +98,13 @@ namespace Synthesizer
             xElement_programSpec.Save($"{folderPath}\\ProgramSpec{files.Count() + 1}.xml");
         }
 
-        public static void CreateBenchmark(Random random, int numberOfExamples, int componentNumbers = 5)
+        public static void CreateBenchmark(Random random, int numberOfExamples, int componentNumbers = 5, int input_arg_limit = 2)
         {            
             var context = new Microsoft.Z3.Context(new Dictionary<string, string>() { { "proof", "true" } });
 
             var typeSpecs = TypeSpecBuilder.Build(Resources.path_typeSpec);
             var grammar = default(Grammar);
             var root = default(TreeNode<string>);
-            var input_arg_limit = 5;
             var parameters = new List<Parameter>();
             SetupNewProgram(ref root, ref grammar, typeSpecs, random, input_arg_limit, ref parameters);
 
