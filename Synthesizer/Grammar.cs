@@ -433,7 +433,7 @@ namespace Synthesis
 
             //holeToFill.deadends.Add(holeToFill.Data);
 
-            if (param.use_base_lemmas)
+            if (param.use_base_lemmas || (!param.use_base_lemmas && param.use_extended_lemmas))
             {
                 var lemma = Lemma.NewLemma(root, context);
 

@@ -264,7 +264,7 @@ namespace Synthesis
                         var check = AreEqual_Examples(synthesisParams.programSpec, root);
                         if (!check)
                         {
-                            if (param.use_base_lemmas)
+                            if (param.use_base_lemmas || (!param.use_base_lemmas && param.use_extended_lemmas))
                             {
                                 var lemma = Lemma.NewLemma(root, context);
 
@@ -406,9 +406,9 @@ namespace Synthesis
             {
                 use_base_lemmas = false,
                 use_extended_lemmas = true,
-                find_groundTruth = false,
-                random = true,
-                printConsole = false
+                find_groundTruth = true,
+                random = false,
+                printConsole = true
             };
 
             var rand = new Random(2);
