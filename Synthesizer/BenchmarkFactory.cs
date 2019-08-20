@@ -162,18 +162,41 @@ namespace Synthesizer
 
             parameters = new List<Parameter>();
 
-            for (int i = 1; i <= input_arg_limit; i++)
+            if (input_arg_limit == 2)
             {
-                var inputParameter = new Parameter()
+                var inputParameter_1 = new Parameter()
                 {
-                    index = i,
+                    index = 1,
                     parameterType = ParameterType.Input,
-                    argType = random.EnumValue<ArgType>(),
-                    obj = $"x{i}"
+                    argType = ArgType.List,
+                    obj = $"x1"
                 };
-                parameters.Add(inputParameter);
-            }
+                parameters.Add(inputParameter_1);
 
+                var inputParameter_2 = new Parameter()
+                {
+                    index = 2,
+                    parameterType = ParameterType.Input,
+                    argType = ArgType.Int,
+                    obj = $"x2"
+                };
+                parameters.Add(inputParameter_2);
+            }
+            else
+            {
+                for (int i = 1; i <= input_arg_limit; i++)
+                {
+                    var inputParameter = new Parameter()
+                    {
+                        index = i,
+                        parameterType = ParameterType.Input,
+                        argType = random.EnumValue<ArgType>(),
+                        obj = $"x{i}"
+                    };
+                    parameters.Add(inputParameter);
+                }
+            }
+          
             var outputParameter = new Parameter()
             {
                 index = 0,

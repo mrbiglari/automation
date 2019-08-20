@@ -95,7 +95,7 @@ namespace Synthesizer
         }
         public static int pow(int x, int y)
         {
-            return (int)Math.Pow(x,y);
+            return (int)Math.Pow(x, y);
         }
         public static int max(int x, int y)
         {
@@ -132,12 +132,12 @@ namespace Synthesizer
             return x % y != 0;
         }
         public delegate bool Predicate(int x, int y);
-        public static List<int> filter(List<int> list, Predicate predicate, int y)
+        public static List<int> filter(List<int> list, Func<int, int, bool> predicate, int y)
         {
             return list.Where(x => predicate(x, y)).ToList();
         }
 
-        public static int count(List<int> list, Predicate predicate, int y)
+        public static int count(List<int> list, Func<int, int, bool> predicate, int y)
         {
             return list.Count(x => predicate(x, y));
         }

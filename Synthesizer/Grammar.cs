@@ -306,8 +306,9 @@ namespace Synthesis
 
                 holeToFill.FillHole(terminal, choosenProductionRule, context, grammar);
 
-                if (Check(root))
-                    ;
+
+                if (param.printConsole)
+                    root.Visualize();
 
 
                 //if (RuleResultsInLeaf(grammar, choosenProductionRule))
@@ -380,8 +381,8 @@ namespace Synthesis
                             }))
                             .SelectMany(x => x).ToList();
 
-                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+                        //var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                        //var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
 
                         //var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
                         //var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
