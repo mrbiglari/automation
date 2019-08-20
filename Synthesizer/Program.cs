@@ -30,7 +30,8 @@ namespace Synthesis
         {
             var minIndex = unSATCore.Min(x => x.index.ToInt());
             var rootCores = unSATCore.Where(x => x.index.ToInt() == minIndex).ToList();
-
+            if (rootCores.Count(x => !x.exprInterVars.Args.First().ToString().Contains(Symbols.outputArg)) != 0)
+                return null;
             var result = unSATCore.GroupBy(x => x.index).Select(grp => grp.First()).OrderBy(x => x.index.ToInt()).ToList();
 
             var rule = grammarGround.productions.Where(x => x.component == rootCores.First().name).First();
@@ -219,7 +220,20 @@ namespace Synthesis
 
                             //creating unSAT Programs from UnSATCore
                             var rootOfUnSATCoreProgram = ExtractUnSATProgram(unSATCore, synthesisParams.grammarGround, context);
-                            unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                            if (rootOfUnSATCoreProgram == null)
+                            {
+                                var lemma = Lemma.NewLemma(root, context);
+
+                                var count = lemmas.Where(x => x.AsExpression(context) == lemma.AsExpression(context)).Count();
+                                if (count == 0)
+                                {
+                                    lemmas.Add(lemma);
+                                }
+                            }
+                            else
+                            {
+                                unSATCorePrograms.Add(rootOfUnSATCoreProgram);
+                            }
 
                             stopWatch.Stop();
                             elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
@@ -325,7 +339,7 @@ namespace Synthesis
             {
                 var benchmark_count = Directory.GetFiles(Resources.path_programSpec_base).Length;
 
-                for (int benchmark_id = 56; benchmark_id <= benchmark_count; benchmark_id++)
+                for (int benchmark_id = 1; benchmark_id <= benchmark_count; benchmark_id++)
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
@@ -386,7 +400,7 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var param = new Params() { use_base_lemmas = true, use_extended_lemmas = false, find_groundTruth = true, random = false};
+            var param = new Params() { use_base_lemmas = false, use_extended_lemmas = true, find_groundTruth = false, random = true};
 
             var rand = new Random(2);
             var program = new Program(rand);

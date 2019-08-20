@@ -78,7 +78,7 @@ namespace Synthesis
             switch (opr)
             {
                 case (ERelationalOperators.Eq):
-                    return ctx.MkEq(arg_1,arg_2);
+                    return ctx.MkEq(arg_1, arg_2);
 
                 case (ERelationalOperators.Gt):
                     return ctx.MkGt(arg_1, arg_2);
@@ -106,7 +106,7 @@ namespace Synthesis
             {ELogicalOperators.AND, "∧"},
             {ELogicalOperators.NOT, "!"},
             {ELogicalOperators.OR, "∨"},
-            {ELogicalOperators.EQV, "≡"},            
+            {ELogicalOperators.EQV, "≡"},
         };
 
         public static BoolExpr GetSpec(ELogicalOperators opr, BoolExpr arg_1, BoolExpr arg_2, Context ctx)
@@ -114,7 +114,7 @@ namespace Synthesis
             switch (opr)
             {
                 case (ELogicalOperators.AND):
-                    return ctx.MkAnd(new BoolExpr[]{arg_1, arg_2});
+                    return ctx.MkAnd(new BoolExpr[] { arg_1, arg_2 });
 
                 case (ELogicalOperators.OR):
                     return ctx.MkOr(new BoolExpr[] { arg_1, arg_2 });
@@ -160,7 +160,7 @@ namespace Synthesis
 
     public class ComponentSpecsBuilder
     {
-        public const string key_componentSpec= "ComponentSpec";
+        public const string key_componentSpec = "ComponentSpec";
         public const string key_name = "Name";
         public const string key_spec = "Spec";
         public static Context context;
@@ -263,16 +263,16 @@ namespace Synthesis
                 case (ArgType.List):
                     foreach (var property in Symbols.properties)
                     {
-                        retSpecList.Add($"{Symbols.inputArg}{Symbols.dot}{property}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}{Symbols.dot}{property}");
+                        retSpecList.Add($"{Symbols.outputArg}{Symbols.dot}{property} {RelationalOperators.operators[ERelationalOperators.Eq]} {Symbols.inputArg}{Symbols.dot}{property}");
                     }
                     break;
 
                 case (ArgType.Int):
-                    retSpecList.Add($"{Symbols.inputArg}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}");
+                    retSpecList.Add($"{Symbols.outputArg} {RelationalOperators.operators[ERelationalOperators.Eq]} {Symbols.inputArg}");
                     break;
 
                 case (ArgType.Other):
-                    retSpecList.Add($"{Symbols.inputArg}{RelationalOperators.operators[ERelationalOperators.Eq]}{Symbols.outputArg}");
+                    retSpecList.Add($"{Symbols.outputArg} {RelationalOperators.operators[ERelationalOperators.Eq]} {Symbols.inputArg}");
                     break;
 
                 default:
@@ -285,7 +285,8 @@ namespace Synthesis
         {
             var componentSpecsList = componentSpecsXML.Descendants(key_componentSpec)
                 .Select(x =>
-                    new Z3ComponentSpecs() {
+                    new Z3ComponentSpecs()
+                    {
                         key = x.Descendants(key_name).FirstOrDefault().Value.Trim(),
                         value = x.Descendants(key_spec).FirstOrDefault().Value.Trim(),
                         type = ComponentType.Component
@@ -301,7 +302,7 @@ namespace Synthesis
                 }
                ).ToList();
             //var ret2 = grammar.types.Select( x => Tuple.Create(x.Item1, x.Item2.obj);
-            return componentSpecsList.Union(ret).ToList();            
+            return componentSpecsList.Union(ret).ToList();
         }
     }
 }

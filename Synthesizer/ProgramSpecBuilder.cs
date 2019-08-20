@@ -40,22 +40,22 @@ namespace Synthesis
         {
             var indexAsString = (index > 0) ? index.ToString() : String.Empty;
             if (param == ParameterType.Input)
-                return Symbols.inputArg + indexAsString + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+                return $"{Symbols.inputArg}{indexAsString} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_1}";
             else if (param == ParameterType.Output)
-                return Symbols.outputArg + indexAsString + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+                return $"{Symbols.outputArg}{indexAsString} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_1}";
             else if (param == ParameterType.Other)
-                return Symbols.outputArg + RelationalOperators.operators[ERelationalOperators.Eq] + arg_1;
+                return $"{Symbols.outputArg} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_1}";
             return null;
         }
         private static string Formulate_List(string arg_1, string arg_2, ParameterType param, int index)
         {
             var indexAsString = (index > 0) ? index.ToString() : String.Empty;
             if (param == ParameterType.Input)
-                return Symbols.inputArg + indexAsString + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
+                return $"{Symbols.inputArg}{indexAsString}{Symbols.dot}{arg_1} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_2}";
             else if (param == ParameterType.Output)
-                return Symbols.outputArg + indexAsString + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
+                return $"{Symbols.outputArg}{indexAsString}{Symbols.dot}{arg_1} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_2}";
             else if (param == ParameterType.Other)
-                return Symbols.outputArg + Symbols.dot + arg_1 + RelationalOperators.operators[ERelationalOperators.Eq] + arg_2;
+                return $"{Symbols.outputArg}{Symbols.dot}{arg_1} {RelationalOperators.operators[ERelationalOperators.Eq]} {arg_2}";
 
             return String.Empty;
         }

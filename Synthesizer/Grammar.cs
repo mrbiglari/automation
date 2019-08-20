@@ -107,7 +107,7 @@ namespace Synthesis
                     {
                         hole.FillHole(rule.component, rule, context, grammar);
                         Console.WriteLine("Propogate:");
-                        root.Visualize();
+                        //root.Visualize();
                         Propogate(root, lemmas, context, grammar);
                         return;
                     }
@@ -317,7 +317,7 @@ namespace Synthesis
                 var elapsedTime_Extension = default(long);
 
                 #region reject with base-lemmas
-                if (param.use_base_lemmas)
+                if (param.use_base_lemmas || (param.use_extended_lemmas && !param.use_base_lemmas))
                 {
                     stopWatch.Start();
                     //Reject current partial program using Lemmas
@@ -358,17 +358,37 @@ namespace Synthesis
                     foreach (var unSATCoreProgram in unSATCorePrograms)
                     {
                         //checking consistency with the knoweldge base (UnSAT Programs)
-                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
-
-                        var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                        var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-
                         var program = new Program(rand);
+
                         //var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
                         //var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
 
-                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram.ToList().ToArray()), context.MkAnd(unSATPorgram)));
+                        var unSATPorgram = test(unSATCoreProgram, grammar, z3ComponentsSpecs)
+                            .SplitBy(LogicalOperators.operators[ELogicalOperators.AND])
+                            .Select(x => ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
+                            {
+                                key = x,
+                                value = x
+                            }))
+                            .SelectMany(x => x).ToList();
+                        var candidateProgram = test(root, grammar, z3ComponentsSpecs)
+                            .SplitBy(LogicalOperators.operators[ELogicalOperators.AND])
+                            .Select(x => ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
+                            {
+                                key = x,
+                                value = x
+                            }))
+                            .SelectMany(x => x).ToList();
+
+                        var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                        var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+
+                        //var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                        //var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+
+
+
+                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram), context.MkAnd(unSATPorgram)));
                         var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
 
                         if (checkIfUnSAT)
@@ -376,7 +396,7 @@ namespace Synthesis
                             holeToFill.MakeHole();
                             possibleProductionRules.Remove(choosenProductionRule);
                             extensionCounter++;
-                            //break;
+                            break;
                         }
                     }
                     stopWatch.Stop();
@@ -456,6 +476,111 @@ namespace Synthesis
 
             return temp_1;
         }
+        public string test(TreeNode<string> root, Grammar grammar, List<Z3ComponentSpecs> z3ComponentSpecs)
+        {
+            var spec = root.getSpecAsString(grammar, z3ComponentSpecs);
+            var root_constraints = spec.SplitBy(LogicalOperators.operators[ELogicalOperators.AND]).Where(x => x.Contains("y")).ToList();
+
+            var newSpecList = new List<string>();
+
+            foreach (var constraint in root_constraints)
+            {
+                var newSpec = recurApply(constraint, spec);
+                if (newSpec != null)
+                    newSpecList.Add(newSpec);
+            }
+            return String.Join($" {LogicalOperators.operators[ELogicalOperators.AND]} ", newSpecList);
+        }
+
+
+        public string recurApply(string constraint, string spec)
+        {
+            var transitive_reductions = new List<string>();
+            var newSpec = constraint;
+            var s = spec.SplitBy(LogicalOperators.operators[ELogicalOperators.AND]).Select(x => x.SplitBy(" ").First()).ToList();
+            if (s.Contains(newSpec.SplitBy(" ").Last()))
+            {
+                var root_splits = newSpec.SplitBy(" ").ToList();
+                var child_constraints = spec.SplitBy(LogicalOperators.operators[ELogicalOperators.AND]).
+                    Where(x => x.SplitBy(" ").First().Contains(root_splits.Single(y => y.Contains("v")))).ToList();
+
+                foreach (var child_constraint in child_constraints)
+                {
+                    var newSpec1 = test1(newSpec, spec, child_constraint);
+                    if (newSpec1 == null)
+                        continue;
+                    newSpec1 = recurApply(newSpec1, spec);
+                    if (newSpec1 != null)
+                        transitive_reductions.Add(newSpec1);
+                }
+
+            }
+            else
+                transitive_reductions.Add(newSpec);
+
+            if (newSpec == null)
+                return null;
+
+            if (transitive_reductions.Count(x => x == null) != 0)
+                ;
+            transitive_reductions.RemoveAll(x => x.SplitBy(" ").Last().Contains("v"));
+            if (transitive_reductions.Count == 0)
+                return null;
+
+            //return newSpec;
+            return String.Join($" {LogicalOperators.operators[ELogicalOperators.AND]} ", transitive_reductions);
+        }
+
+        public string test1(string root_constraint, string spec, string child_constraint)
+        {
+
+            if (!root_constraint.Contains("v"))
+                return null;
+            var root_splits = root_constraint.SplitBy(" ").ToList();
+            var first_operator = RelationalOperators.operators.FirstOrDefault(x => x.Value == root_splits[1]).Key;
+            root_splits.Remove(root_splits[1]);
+            var arg_1 = root_splits.Single(x => !x.Contains("v"));
+
+            var child_splits = child_constraint.SplitBy(" ").ToList();
+
+            var second_operator = RelationalOperators.operators.FirstOrDefault(x => x.Value == child_splits[1]).Key;
+            child_splits.Remove(child_splits[1]);
+            child_splits.Remove(root_splits.Single(y => y.Contains("v")));
+            var transitive_rediction = s(root_splits.First(), child_splits.First(), new List<ERelationalOperators>() { first_operator, second_operator });
+
+            if (transitive_rediction == "true")
+                return null;
+
+            return transitive_rediction;
+
+            //return String.Join($" {LogicalOperators.operators[ELogicalOperators.AND]} ", transitive_reductions);
+
+        }
+
+        public string s(string s1, string s2, List<ERelationalOperators> operators)
+        {
+
+            if (operators.First() == operators.Last())
+                return $"{s1} {RelationalOperators.operators[operators.First()]} {s2}";
+            else if (operators.Any(x => x == ERelationalOperators.Eq))
+            {
+                var opr = operators.Where(x => x == ERelationalOperators.Eq).First();
+                operators.Remove(opr);
+
+                return $"{s1} {RelationalOperators.operators[operators.First()]} {s2}";
+            }
+            else if (operators.Any(x => x == ERelationalOperators.Gt) && operators.Any(x => x == ERelationalOperators.GtEq))
+            {
+                return $"{s1} {RelationalOperators.operators[ERelationalOperators.Gt]} {s2}";
+            }
+            else if (operators.Any(x => x == ERelationalOperators.LEq) && operators.Any(x => x == ERelationalOperators.L))
+            {
+                return $"{s1} {RelationalOperators.operators[ERelationalOperators.L]} {s2}";
+            }
+            else
+                return "true";
+        }
+
 
         public bool RuleResultsInLeaf(Grammar grammar, Production rule)
         {

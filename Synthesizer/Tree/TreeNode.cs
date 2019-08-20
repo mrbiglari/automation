@@ -55,6 +55,24 @@ namespace CSharpTree
             get { return !ContainsHoles(); }
         }
 
+        public string getSpecAsString(Grammar grammar, List<Z3ComponentSpecs> componentSpecs)
+        {
+            var ret = new List<string>();
+            var rr = SATEncoder<T>.GetSpecAsString(this, grammar, componentSpecs, "v");
+            ret.Add(rr);
+            foreach (var child in Children)
+            {
+                if (!child.IsHole)
+                {
+                    var r1 = child.getSpecAsString(grammar, componentSpecs);
+                    ret.Add(r1);
+
+                }
+            }
+            return String.Join($" {LogicalOperators.operators[ELogicalOperators.AND]} ", ret);
+        }
+
+
         public int Size
         {
             get
