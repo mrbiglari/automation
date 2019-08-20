@@ -421,7 +421,8 @@ namespace Synthesis
                 }
             }
 
-            //root.Visualize();
+            if(param.printConsole)
+                root.Visualize();
             //File.AppendAllText(Resources.path_results, root.ToString());
 
 

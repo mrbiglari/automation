@@ -113,7 +113,7 @@
   </ComponentSpec>
   <ComponentSpec>
     <Name>
-      scanl1
+      scanL1
     </Name>
     <Spec>
       y.size = x1.size ∧ y.first = x1.first

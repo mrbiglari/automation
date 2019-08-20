@@ -170,7 +170,9 @@ namespace Synthesis
                 currentNode = synthesisParams.grammar.Decide_AST(root, ref unSATCorePrograms, context, synthesisParams.grammar,
                    synthesisParams.z3ComponentSpecs, synthesisParams.programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter,
                    ref pruningTimes, param);
-                root.Visualize();
+
+                if (param.printConsole)
+                    root.Visualize();
 
                 //File.AppendAllText(Resources.path_results, root.ToString());
                 //synthesisParams.grammar.Propogate(root, lemmas, context, synthesisParams.grammar);
@@ -400,7 +402,14 @@ namespace Synthesis
 
         static void Main(string[] args)
         {
-            var param = new Params() { use_base_lemmas = false, use_extended_lemmas = true, find_groundTruth = false, random = true};
+            var param = new Params()
+            {
+                use_base_lemmas = false,
+                use_extended_lemmas = true,
+                find_groundTruth = false,
+                random = true,
+                printConsole = false
+            };
 
             var rand = new Random(2);
             var program = new Program(rand);
@@ -420,7 +429,7 @@ namespace Synthesis
             }
 
             else if (option == "2")
-                BenchmarkFactory.CreateBenchmark(rand);
+                BenchmarkFactory.CreateBenchmark(rand, 1);
 
         }
     }
@@ -432,6 +441,7 @@ namespace Synthesis
         public bool find_groundTruth = false;
         public bool debug = false;
         public bool random = false;
+        public bool printConsole = false;
     }
 
     public class SynthesisParams

@@ -98,7 +98,7 @@ namespace Synthesizer
             xElement_programSpec.Save($"{folderPath}\\ProgramSpec{files.Count() + 1}.xml");
         }
 
-        public static void CreateBenchmark(Random random)
+        public static void CreateBenchmark(Random random, int numberOfExamples, int componentNumbers = 5)
         {            
             var context = new Microsoft.Z3.Context(new Dictionary<string, string>() { { "proof", "true" } });
 
@@ -118,7 +118,7 @@ namespace Synthesizer
                     root.Visualize();
                     var componentNodes = root.Where(x => !x.IsLeaf).ToList();
 
-                    if (componentNodes.Count > 5)
+                    if (componentNodes.Count >= componentNumbers)
                     {
                         var programSpec = new List<List<object>>();
 
@@ -128,7 +128,7 @@ namespace Synthesizer
                             {
                                 var result = CreateRandomParamsAndExecuteProgram(root, random, parameters);
                                 programSpec.Add(result);
-                                if (programSpec.Count == 50)
+                                if (programSpec.Count == numberOfExamples)
                                 {
                                     programSpecs.Add(programSpec);
                                     WriteBenchmark(root, programSpec, parameters, context);
