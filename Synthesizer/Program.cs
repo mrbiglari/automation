@@ -408,7 +408,7 @@ namespace Synthesis
                 use_extended_lemmas = true,
                 find_groundTruth = true,
                 random = false,
-                printConsole = true
+                printConsole = false
             };
 
             var rand = new Random(2);

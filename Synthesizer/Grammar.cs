@@ -356,22 +356,38 @@ namespace Synthesis
                 {
                     stopWatch.Start();
                     //Reject current partial program using unSATPrograms
-                    foreach (var unSATCoreProgram in unSATCorePrograms)
-                    {
+                    //foreach (var unSATCoreProgram in unSATCorePrograms)
+                    //{
                         //checking consistency with the knoweldge base (UnSAT Programs)
                         var program = new Program(rand);
 
-                        //var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
-                        //var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
+                    //var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
+                    //var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
 
-                        var unSATPorgram = test(unSATCoreProgram, grammar, z3ComponentsSpecs)
+                    if (unSATCorePrograms.Count != 0)
+                        ;
+
+                    var unSATPorgram = unSATCorePrograms
+                        .Select(y => test(y, grammar, z3ComponentsSpecs)
                             .SplitBy(LogicalOperators.operators[ELogicalOperators.AND])
                             .Select(x => ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
                             {
                                 key = x,
                                 value = x
                             }))
-                            .SelectMany(x => x).ToList();
+                            .SelectMany(x => x).ToList())
+                            .ToList();
+
+                    var unsatSMT = context.MkOr(unSATPorgram.Select(x => context.MkAnd(x)));
+
+                    //var unSATPorgram = test(unSATCoreProgram, grammar, z3ComponentsSpecs)
+                    //        .SplitBy(LogicalOperators.operators[ELogicalOperators.AND])
+                    //        .Select(x => ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
+                    //        {
+                    //            key = x,
+                    //            value = x
+                    //        }))
+                    //        .SelectMany(x => x).ToList();
                         var candidateProgram = test(root, grammar, z3ComponentsSpecs)
                             .SplitBy(LogicalOperators.operators[ELogicalOperators.AND])
                             .Select(x => ComponentSpecsBuilder.GetComponentSpec(new Z3ComponentSpecs()
@@ -381,25 +397,27 @@ namespace Synthesis
                             }))
                             .SelectMany(x => x).ToList();
 
-                        //var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
-                        //var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
+                    //var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
+                    //var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
 
-                        //var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
-                        //var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                    //var candidateProgram = satEncodedArtifactsAsSMTModel_1.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
+                    //var unSATPorgram = satEncodedArtifactsAsSMTModel_2.satEncodedProgram.SelectMany(x => x.clauses.First).ToArray();
 
 
 
-                        var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram), context.MkAnd(unSATPorgram)));
-                        var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
+                    //var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram), context.MkAnd(unSATPorgram)));
+                    var check = context.MkNot(context.MkImplies(context.MkAnd(candidateProgram), unsatSMT));
+                    
+                    var checkIfUnSAT = SMTSolver.CheckIfUnSAT(context, check);
 
-                        if (checkIfUnSAT)
-                        {
-                            holeToFill.MakeHole();
-                            possibleProductionRules.Remove(choosenProductionRule);
-                            extensionCounter++;
-                            break;
-                        }
+                    if (checkIfUnSAT)
+                    {
+                        holeToFill.MakeHole();
+                        possibleProductionRules.Remove(choosenProductionRule);
+                        extensionCounter++;
+                        //break;
                     }
+                    //}
                     stopWatch.Stop();
                     elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
                     stopWatch.Reset();
