@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace CSharpTree
 {
+    [Serializable]
     public class TreeNode<T> : IEnumerable<TreeNode<T>>
     {
         public T Data { get; set; }

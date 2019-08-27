@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Synthesis
 {
-
+    [Serializable]
     public class Production
     {
         public string leftHandSide;

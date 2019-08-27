@@ -267,7 +267,7 @@ namespace Synthesis
 
         public TreeNode<string> Decide_AST(TreeNode<string> root, ref List<TreeNode<string>> unSATCorePrograms,
             Context context, Grammar grammar, List<Z3ComponentSpecs> z3ComponentsSpecs, ProgramSpec programSpec,
-            ref Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param)
+            ref Lemmas lemmas, ref int lemmaCounter, ref int extensionCounter, ref List<long> pruningTimes, Params param, ref List<long> avg_b, ref List<long> avg_e)
         {
             var searchStack = DFS(root, (x) => x.IsHole);
             var hole = searchStack.Pop();
@@ -318,7 +318,7 @@ namespace Synthesis
                 var elapsedTime_Extension = default(long);
 
                 #region reject with base-lemmas
-                if (param.use_base_lemmas || (param.use_extended_lemmas && !param.use_base_lemmas))
+                if (param.use_base_lemmas || (!param.use_base_lemmas && param.use_extended_lemmas))
                 {
                     stopWatch.Start();
                     //Reject current partial program using Lemmas
@@ -347,6 +347,7 @@ namespace Synthesis
 
                     stopWatch.Stop();
                     elapsedTime_Base = stopWatch.ElapsedMilliseconds;
+                    avg_b.Add(elapsedTime_Base);
                     stopWatch.Reset();
                 }
                 #endregion
@@ -363,9 +364,6 @@ namespace Synthesis
 
                     //var unSATCores = program.CheckConflict(z3ComponentsSpecs, context, programSpec, root, grammar);
                     //var unSATCore = program.CheckConflict(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar);
-
-                    if (unSATCorePrograms.Count != 0)
-                        ;
 
                     var unSATPorgram = unSATCorePrograms
                         .Select(y => test(y, grammar, z3ComponentsSpecs)
@@ -397,6 +395,8 @@ namespace Synthesis
                             }))
                             .SelectMany(x => x).ToList();
 
+                    //var ss = test(root.Children[0], grammar, z3ComponentsSpecs);
+
                     //var satEncodedArtifactsAsSMTModel_1 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, root, grammar, Symbols.ivs);
                     //var satEncodedArtifactsAsSMTModel_2 = SATEncoder<string>.SMTEncode(z3ComponentsSpecs, context, programSpec, unSATCoreProgram, grammar, "r");
 
@@ -420,6 +420,7 @@ namespace Synthesis
                     //}
                     stopWatch.Stop();
                     elapsedTime_Extension = stopWatch.ElapsedMilliseconds;
+                    avg_e.Add(elapsedTime_Extension);
                     stopWatch.Reset();
                 }
                 #endregion
@@ -480,7 +481,7 @@ namespace Synthesis
 
             holeToFill.Parent.holes.Push(holeToFill.Parent.holesBackTrack.Pop());
             return Decide_AST(root, ref unSATCorePrograms, context, grammar, z3ComponentsSpecs,
-                programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param);
+                programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter, ref pruningTimes, param, ref avg_b, ref avg_e);
 
         }
 
