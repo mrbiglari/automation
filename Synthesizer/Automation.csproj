@@ -7,8 +7,8 @@
     <ProjectGuid>{CE08D64E-D9C6-4D7A-BCAF-EBAD801FFF97}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Synthesizer</RootNamespace>
-    <AssemblyName>Synthesizer</AssemblyName>
+    <RootNamespace>Automation</RootNamespace>
+    <AssemblyName>Automation</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

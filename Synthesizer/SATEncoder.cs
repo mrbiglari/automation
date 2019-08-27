@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Synthesis.UnSatCoreClause;
+using static Automation.UnSatCoreClause;
 
-namespace Synthesis
+namespace Automation
 {
     public enum ComponentType
     {

@@ -9,7 +9,7 @@ using CSharpTree;
 using Microsoft.Z3;
 using Synthesizer;
 
-namespace Synthesis
+namespace Automation
 {
     public class Program
     {

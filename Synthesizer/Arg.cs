@@ -1,4 +1,4 @@
-﻿namespace Synthesis
+﻿namespace Automation
 {
     public class Arg
     {

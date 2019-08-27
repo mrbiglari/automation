@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Synthesis
+namespace Automation
 {
     public enum SymbolType
     {
