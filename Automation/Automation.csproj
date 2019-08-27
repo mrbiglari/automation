@@ -57,6 +57,7 @@
     </Reference>
     <Reference Include="Microsoft.Z3, Version=4.8.1.9857, Culture=neutral, PublicKeyToken=9c8d792caae602a2, processorArchitecture=AMD64">
       <HintPath>packages\Microsoft.Z3.x64.4.8.1\lib\net40\Microsoft.Z3.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NHibernate, Version=5.2.0.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <HintPath>..\packages\NHibernate.5.2.3\lib\net461\NHibernate.dll</HintPath>
