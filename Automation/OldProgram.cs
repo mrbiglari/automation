@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
-namespace Synthesis
+namespace Automation
 {
 
     class OldProgram

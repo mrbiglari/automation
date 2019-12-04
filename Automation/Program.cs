@@ -10,7 +10,7 @@ using Microsoft.Z3;
 using Synthesizer;
 using Synthesizer.Logic;
 
-namespace Synthesis
+namespace Automation
 {
     public class Program
     {
@@ -25,7 +25,8 @@ namespace Synthesis
         {
             this.random = random;
         }
-
+        public List<long> avg_b = new List<long>();
+        public List<long> avg_e = new List<long>();
 
         public TreeNode<string> ExtractUnSATProgram(UnSatCore unSATCore, Grammar grammarGround, Context context)
         {
@@ -165,12 +166,14 @@ namespace Synthesis
             lemmas = new Lemmas();
             unSATCorePrograms = new List<TreeNode<string>>();
             var currentNode = root;
+
+
             while (true)
             {
                 //currentNode = grammar.Decide(root, lemmas, context, grammar);
                 currentNode = synthesisParams.grammar.Decide_AST(root, ref unSATCorePrograms, context, synthesisParams.grammar,
                    synthesisParams.z3ComponentSpecs, synthesisParams.programSpec, ref lemmas, ref lemmaCounter, ref extensionCounter,
-                   ref pruningTimes, param);
+                   ref pruningTimes, param, ref avg_b, ref avg_e);
 
                 if (param.printConsole)
                     root.Visualize();
@@ -380,7 +383,7 @@ namespace Synthesis
                     if (numberOfPrograms == 1)
                     {
                         var root = roots.First();
-                        string createText = $"{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {SAT_Encode(root, context)}\n";
+                        string createText = $"{stopWatch.Elapsed.TotalSeconds.ToString()} {benchmark_id} {lemmas.Count} {unSATCorePrograms.Count} {root.Size} {avg_b.Average()} {avg_e.Average()} {SAT_Encode(root, context)}\n";
                         if (benchmark_id == 1)
                         {
                             //if (!Directory.Exists(Resources.path_results))
@@ -419,7 +422,7 @@ namespace Synthesis
                 use_extended_lemmas = true,
                 find_groundTruth = true,
                 random = false,
-                printConsole = false
+                printConsole = true
             };
 
             var rand = new Random(2);

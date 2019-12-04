@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Synthesis
+namespace Automation
 {
-
+    [Serializable]
     public class Production
     {
         public string leftHandSide;

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Z3;
-using Synthesis;
+using Automation;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace CSharpTree
 {
+    [Serializable]
     public class TreeNode<T> : IEnumerable<TreeNode<T>>
     {
         public T Data { get; set; }

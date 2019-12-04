@@ -34,7 +34,7 @@ namespace Synthesizer
         {
             if (list.Count < n)
                 return null;
-            return list.GetRange(n, list.Count);
+            return list.GetRange(n, list.Count - n);
         }
         public static int access(List<int> list, int n)
         {
