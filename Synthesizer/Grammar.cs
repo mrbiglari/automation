@@ -352,7 +352,7 @@ namespace Synthesis
                 #endregion
 
                 #region reject with extended-lemmas
-                if (param.use_extended_lemmas)
+                if (param.use_extended_lemmas && unSATCorePrograms.Count >0)
                 {
                     stopWatch.Start();
                     //Reject current partial program using unSATPrograms

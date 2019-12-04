@@ -15,7 +15,8 @@ namespace Synthesis
         AND,
         OR,
         NOT,
-        EQV
+        BiIMP,
+        IMP
     }
 
     public enum ERelationalOperators
@@ -106,7 +107,7 @@ namespace Synthesis
             {ELogicalOperators.AND, "∧"},
             {ELogicalOperators.NOT, "!"},
             {ELogicalOperators.OR, "∨"},
-            {ELogicalOperators.EQV, "≡"},
+            {ELogicalOperators.BiIMP, "≡"},
         };
 
         public static BoolExpr GetSpec(ELogicalOperators opr, BoolExpr arg_1, BoolExpr arg_2, Context ctx)
@@ -122,7 +123,7 @@ namespace Synthesis
                 case (ELogicalOperators.NOT):
                     return ctx.MkNot(arg_1);
 
-                case (ELogicalOperators.EQV):
+                case (ELogicalOperators.BiIMP):
                     return ctx.MkEq(arg_1, arg_2);
             }
             return null;

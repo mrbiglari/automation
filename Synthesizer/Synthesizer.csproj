@@ -85,6 +85,8 @@
   <ItemGroup>
     <Compile Include="Arg.cs" />
     <Compile Include="BenchmarkFactory.cs" />
+    <Compile Include="Logic\Clause.cs" />
+    <Compile Include="Params.cs" />
     <Compile Include="ProgramRunner.cs" />
     <Compile Include="Specs\ComponentConcreteSpecs.cs" />
     <Compile Include="ComponentSpec.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="SATEncoder.cs" />
     <Compile Include="SMTSolver.cs" />
     <Compile Include="StringResources.cs" />
+    <Compile Include="SynthesisParams.cs" />
     <Compile Include="TreeVisualizer.cs" />
     <Compile Include="Tree\TreeNode.cs" />
     <Compile Include="TypeSpecBuilder.cs" />

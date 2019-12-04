@@ -8,6 +8,7 @@ using System.Reflection;
 using CSharpTree;
 using Microsoft.Z3;
 using Synthesizer;
+using Synthesizer.Logic;
 
 namespace Synthesis
 {
@@ -400,6 +401,16 @@ namespace Synthesis
             }
         }
 
+        //" (x>y) \and (z>y) \and ((x>u) \or (u>x))"
+
+        public void TestRun()
+        {
+            var term_x = new Term() {variable = "x" };
+            var term_y = new Term() { variable = "y" };
+            var term_z = new Term() { variable = "z" };
+            var term_u = new Term() { variable = "u" };
+        }
+
         static void Main(string[] args)
         {
             var param = new Params()
@@ -413,6 +424,7 @@ namespace Synthesis
 
             var rand = new Random(2);
             var program = new Program(rand);
+            program.TestRun();
 
             Console.WriteLine("Enter options below:");
             Console.WriteLine("1-  ");
@@ -433,26 +445,4 @@ namespace Synthesis
 
         }
     }
-
-    public class Params
-    {
-        public bool use_extended_lemmas = false;
-        public bool use_base_lemmas = false;
-        public bool find_groundTruth = false;
-        public bool debug = false;
-        public bool random = false;
-        public bool printConsole = false;
-    }
-
-    public class SynthesisParams
-    {
-        public List<TypeSpec> typeSpecs;
-        public ProgramSpec programSpec;
-
-        public Grammar grammar;
-        public Grammar grammarGround;
-        public List<Z3ComponentSpecs> z3ComponentSpecs;
-        public int benchmarkId;
-    }
-
 }
